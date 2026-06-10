@@ -79,9 +79,32 @@
   </a>
 </div>
 
-<script src="js/db.js"></script>
 <script>
-  if (DB.isAdminLoggedIn()) window.location.href = 'admin-panel.html';
+  // ── Self-contained auth — no external dependency on db.js ──
+  const ADMIN_KEY  = 'inspeq_admin_session';
+  const ADMIN_USER = 'admin';
+  const ADMIN_PASS = 'inspeq2025!';
+
+  function uid() { return 'tok_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+  function isLoggedIn() {
+    try {
+      const s = JSON.parse(localStorage.getItem(ADMIN_KEY) || 'null');
+      return s && s.expires > Date.now();
+    } catch(e) { return false; }
+  }
+
+  function doLogin(u, p) {
+    if (u.trim() === ADMIN_USER && p === ADMIN_PASS) {
+      const session = { token: uid(), expires: Date.now() + 8 * 60 * 60 * 1000 };
+      localStorage.setItem(ADMIN_KEY, JSON.stringify(session));
+      return true;
+    }
+    return false;
+  }
+
+  // Redirect if already logged in
+  if (isLoggedIn()) window.location.replace('admin-panel.html');
 
   function handleLogin(e) {
     e.preventDefault();
@@ -91,18 +114,20 @@
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner"></div>';
 
+    // small delay for UX feel
     setTimeout(() => {
       const u = document.getElementById('username').value;
       const p = document.getElementById('password').value;
-      const token = DB.adminLogin(u, p);
-      if (token) {
-        window.location.href = 'admin-panel.html';
+      if (doLogin(u, p)) {
+        window.location.replace('admin-panel.html');
       } else {
         err.classList.add('show');
         btn.disabled = false;
-        btn.textContent = 'Sign in';
+        btn.innerHTML = 'Sign in';
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
       }
-    }, 600);
+    }, 500);
   }
 </script>
 </body>
