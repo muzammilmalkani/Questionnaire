@@ -453,9 +453,23 @@
 <script>
 'use strict';
 
-// ── Auth ─────────────────────────────────────────────────
-if (!DB.isAdminLoggedIn()) window.location.href = 'admin.html';
-function logout() { DB.adminLogout(); window.location.href = 'admin.html'; }
+// ── Auth — inline fallback so this works even if db.js has a load hiccup ──
+function _isSessionValid() {
+  try {
+    const s = JSON.parse(localStorage.getItem('inspeq_admin_session') || 'null');
+    return s && s.expires > Date.now();
+  } catch(e) { return false; }
+}
+
+if (!_isSessionValid()) {
+  window.location.replace('admin.html');
+  throw new Error('Not authenticated'); // stop further execution
+}
+
+function logout() {
+  localStorage.removeItem('inspeq_admin_session');
+  window.location.replace('admin.html');
+}
 
 // ── View switching ────────────────────────────────────────
 function showView(name) {
