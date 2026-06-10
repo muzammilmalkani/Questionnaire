@@ -964,20 +964,19 @@ function publishWizard() {
     alert('Please add at least one question before publishing.');
     gotoStep(2); return;
   }
-  if (wizQuestions.some(q => !q.label.trim())) {
+  if (wizQuestions.some(q => !(q.label || '').trim())) {
     alert('Some questions have no label. Please fill in all question labels.');
     gotoStep(2); return;
   }
 
-  const data = {
-    id:          wizEditId || undefined,
-    title, category,
-    description: desc,
-    is_active:   document.getElementById('wActive').checked,
-  };
-  const saved = DB.saveQuestionnaire(data);
-  const qId   = wizEditId || saved?.id;
-  if (qId) DB.saveQuestions(qId, wizQuestions);
+  // Build the payload — only include id when editing an existing record
+  const data = { title, category, description: desc, is_active: document.getElementById('wActive').checked };
+  if (wizEditId) data.id = wizEditId;
+
+  const saved = DB.saveQuestionnaire(data);   // returns the full saved object including id
+  const qId   = saved && saved.id;
+  if (!qId) { alert('Something went wrong saving the questionnaire. Please try again.'); return; }
+  DB.saveQuestions(qId, wizQuestions);
 
   closeWizard();
   renderQs();
