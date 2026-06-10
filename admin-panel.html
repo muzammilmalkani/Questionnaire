@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel | Inspeq Discovery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --ink:#0A0F1E; --ink-soft:#3D4460; --ink-muted:#6B7280;
+      --surface:#fff; --surface-2:#F8F9FC; --surface-3:#F0F2F8;
+      --border:#E5E8F0; --accent:#2563EB; --accent-dark:#1D4ED8;
+      --accent-light:#EFF4FF; --accent-2:#0EA5E9;
+      --success:#10B981; --success-bg:#ECFDF5;
+      --danger:#EF4444; --danger-bg:#FFF1F2;
+      --warning-bg:#FFFBEB;
+      --r:12px; --r-sm:8px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--surface-2);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100vh}
+
+    /* ── LAYOUT ── */
+    .layout{display:flex;min-height:100vh}
+    .sidebar{width:240px;flex-shrink:0;background:var(--ink);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;display:flex;flex-direction:column}
+    .main{flex:1;margin-left:240px}
+
+    /* ── SIDEBAR ── */
+    .sb-logo{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
+    .sb-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .sb-logo-icon svg{width:17px;height:17px;fill:white}
+    .sb-logo-text{color:white;font-weight:700;font-size:1rem}
+    .sb-logo-badge{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#60A5FA;background:rgba(37,99,235,.25);border-radius:4px;padding:2px 6px;white-space:nowrap}
+    .sb-nav{padding:14px 12px;flex:1}
+    .sb-section{font-size:.65rem;font-weight:700;color:#475569;letter-spacing:.1em;text-transform:uppercase;padding:0 8px;margin:18px 0 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:#94A3B8;font-size:.875rem;font-weight:500;cursor:pointer;transition:all .15s;user-select:none;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+    .nav-item:hover{color:white;background:rgba(255,255,255,.06)}
+    .nav-item.active{color:white;background:rgba(37,99,235,.25)}
+    .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.6}
+    .nav-item.active svg{opacity:1}
+    .nav-badge{margin-left:auto;background:var(--accent);color:white;font-size:.65rem;font-weight:700;border-radius:10px;padding:2px 7px;min-width:20px;text-align:center}
+    .sb-footer{padding:14px 12px;border-top:1px solid rgba(255,255,255,.07)}
+    .sb-user{display:flex;align-items:center;gap:10px;padding:10px 12px}
+    .sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:white;flex-shrink:0}
+    .sb-uname{font-size:.8125rem;color:#94A3B8;flex:1}
+    .logout-btn{font-size:.75rem;color:#64748B;cursor:pointer;background:none;border:none;font-family:inherit;transition:color .15s}
+    .logout-btn:hover{color:var(--danger)}
+
+    /* ── PAGE ── */
+    .page-header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .page-title{font-size:1.25rem;font-weight:800;letter-spacing:-.02em}
+    .page-sub{font-size:.8125rem;color:var(--ink-muted);margin-top:2px}
+    .content{padding:28px 32px}
+
+    /* ── STATS ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+    .stat-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:8px}
+    .stat-value{font-size:2rem;font-weight:800;letter-spacing:-.03em}
+    .stat-sub{font-size:.75rem;color:var(--success);margin-top:4px}
+
+    /* ── TOOLBAR ── */
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+    .search-input{flex:1;min-width:180px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s}
+    .search-input:focus{border-color:var(--accent)}
+    .sel-filter{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+
+    /* ── BUTTONS ── */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:.875rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap}
+    .btn-sm{padding:7px 14px;font-size:.8125rem}
+    .btn-xs{padding:5px 10px;font-size:.75rem}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-dark)}
+    .btn-primary:disabled{opacity:.55;cursor:not-allowed}
+    .btn-secondary{background:var(--surface);color:var(--ink-soft);border:1.5px solid var(--border)}
+    .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+    .btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid #FECACA}
+    .btn-danger:hover{background:#FEE2E2}
+    .btn-success{background:var(--success-bg);color:var(--success);border:1px solid #A7F3D0}
+    .btn-success:hover{background:#D1FAE5}
+
+    /* ── TABLE ── */
+    .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+    .table-hd-row{padding:14px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem;display:flex;align-items:center;justify-content:space-between}
+    table{width:100%;border-collapse:collapse}
+    thead tr{background:var(--surface-2);border-bottom:1px solid var(--border)}
+    th{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);padding:12px 16px;text-align:left;white-space:nowrap}
+    td{padding:13px 16px;font-size:.875rem;border-bottom:1px solid var(--surface-3);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--surface-2)}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:600;white-space:nowrap}
+    .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+    .badge-green{background:var(--success-bg);color:#065F46}
+    .badge-gray{background:var(--surface-3);color:var(--ink-soft)}
+    .badge-blue{background:var(--accent-light);color:#1E40AF}
+    .badge-purple{background:#F5F3FF;color:#6D28D9}
+    .actions{display:flex;gap:5px;flex-wrap:wrap}
+
+    /* ── EMPTY ── */
+    .empty{text-align:center;padding:56px 24px;color:var(--ink-muted)}
+    .empty-icon{font-size:2.25rem;margin-bottom:12px;opacity:.35}
+    .empty h3{font-size:.9375rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+    .empty p{font-size:.85rem}
+
+    /* ── OVERLAY / MODAL ── */
+    .overlay{position:fixed;inset:0;background:rgba(10,15,30,.55);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .2s}
+    .overlay.open{opacity:1;pointer-events:all}
+    .modal{background:var(--surface);border-radius:16px;width:100%;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,.3);transform:translateY(16px);transition:transform .2s}
+    .overlay.open .modal{transform:translateY(0)}
+    .modal-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+    .modal-title{font-size:1.125rem;font-weight:800;letter-spacing:-.01em}
+    .modal-sub{font-size:.8rem;color:var(--ink-muted);margin-top:3px}
+    .modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface-3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem;transition:background .15s}
+    .modal-close:hover{background:var(--border)}
+    .modal-ft{display:flex;align-items:center;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+    .modal-ft-spacer{flex:1}
+
+    /* ── WIZARD STEPS ── */
+    .wiz-steps{display:flex;align-items:center;margin-bottom:28px;gap:0}
+    .wiz-step-item{display:flex;align-items:center;gap:8px}
+    .wiz-step-item .wiz-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--surface);color:var(--ink-muted);font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+    .wiz-step-item .wiz-lbl{font-size:.75rem;font-weight:600;color:var(--ink-muted);white-space:nowrap;transition:color .2s}
+    .wiz-step-item.active .wiz-num{border-color:var(--accent);background:var(--accent);color:white}
+    .wiz-step-item.active .wiz-lbl{color:var(--accent)}
+    .wiz-step-item.done .wiz-num{border-color:var(--success);background:var(--success);color:white}
+    .wiz-step-item.done .wiz-lbl{color:var(--success)}
+    .wiz-connector{flex:1;height:2px;background:var(--border);min-width:24px;transition:background .2s}
+    .wiz-connector.done{background:var(--success)}
+
+    /* ── WIZARD PANELS ── */
+    .wiz-panel{display:none}
+    .wiz-panel.active{display:block}
+
+    /* ── FORM ── */
+    .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .field{margin-bottom:16px}
+    .field:last-child{margin-bottom:0}
+    .field label{display:block;font-size:.8125rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+    .field input,.field textarea,.field select{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:.9rem;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s;appearance:none;-webkit-appearance:none}
+    .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+    .field textarea{resize:vertical;min-height:80px}
+    .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+    .field-note{font-size:.75rem;color:var(--ink-muted);margin-top:4px}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--border)}
+    .toggle-lbl{font-size:.875rem;font-weight:500}
+    .toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+    .toggle input{display:none}
+    .tslider{position:absolute;inset:0;background:var(--border);border-radius:100px;cursor:pointer;transition:background .2s}
+    .tslider::before{content:'';position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+    .toggle input:checked+.tslider{background:var(--success)}
+    .toggle input:checked+.tslider::before{transform:translateX(18px)}
+
+    /* ── SECTION BUILDER ── */
+    .sec-add-row{display:flex;gap:8px;margin-bottom:12px}
+    .sec-add-row input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);outline:none;transition:border-color .15s;background:var(--surface)}
+    .sec-add-row input:focus{border-color:var(--accent)}
+    .sec-empty{padding:20px;text-align:center;background:var(--surface-2);border-radius:var(--r-sm);border:1px dashed var(--border);color:var(--ink-muted);font-size:.875rem}
+    .sec-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+    .sec-handle{color:var(--ink-muted);cursor:grab;font-size:1rem;flex-shrink:0}
+    .sec-num{width:22px;height:22px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .sec-name{flex:1;font-size:.875rem;font-weight:600;color:var(--ink)}
+    .sec-qcount{font-size:.75rem;color:var(--ink-muted)}
+    .sec-del{background:var(--danger-bg);border:none;color:var(--danger);width:24px;height:24px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:background .15s;flex-shrink:0}
+    .sec-del:hover{background:#FEE2E2}
+
+    /* ── QUESTION BUILDER ── */
+    .q-item{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:10px}
+    .q-item-hd{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+    .q-drag{color:var(--ink-muted);cursor:grab;font-size:1rem;flex-shrink:0}
+    .q-num{width:22px;height:22px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .q-type-pill{font-size:.65rem;font-weight:700;background:var(--surface-3);border:1px solid var(--border);color:var(--ink-soft);border-radius:4px;padding:2px 7px;text-transform:uppercase;letter-spacing:.04em}
+    .q-sec-pill{font-size:.65rem;font-weight:700;color:var(--accent);background:var(--accent-light);border-radius:4px;padding:2px 7px}
+    .q-del{margin-left:auto;background:var(--danger-bg);border:none;color:var(--danger);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.875rem;transition:background .15s;flex-shrink:0}
+    .q-del:hover{background:#FEE2E2}
+    .q-grid-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}
+    .q-item .field{margin-bottom:10px}
+    .q-item .field:last-child{margin-bottom:0}
+    .q-add-btn{width:100%;padding:11px;border:2px dashed var(--border);border-radius:var(--r-sm);background:transparent;color:var(--ink-soft);font-size:.875rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px}
+    .q-add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+    /* ── PREVIEW ── */
+    .preview-card{background:linear-gradient(135deg,#0A0F1E,#0F1A3A);border-radius:12px;padding:22px 26px;margin-bottom:16px}
+    .preview-cat{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#93C5FD;margin-bottom:8px}
+    .preview-title{font-size:1.25rem;font-weight:800;color:white;margin-bottom:6px}
+    .preview-desc{font-size:.875rem;color:#94A3B8;line-height:1.5}
+    .preview-meta{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+    .preview-meta span{font-size:.75rem;color:#7DD3FC}
+    .preview-body{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;max-height:380px;overflow-y:auto}
+    .preview-sec-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px}
+    .preview-q{padding:8px 0;border-bottom:1px solid var(--surface-3)}
+    .preview-q:last-child{border-bottom:none}
+    .preview-q-lbl{font-size:.875rem;font-weight:500;color:var(--ink-soft)}
+    .preview-q-tags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+    .q-tag{font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:4px}
+
+    /* ── SUB DETAIL ── */
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .detail-item{background:var(--surface-2);border-radius:8px;padding:12px}
+    .detail-lbl{font-size:.7rem;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+    .detail-val{font-size:.875rem;font-weight:500}
+    .ans-sec-hd{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+    .ans-item{background:var(--surface-2);border-radius:8px;padding:12px;margin-bottom:8px}
+    .ans-q{font-size:.8rem;font-weight:600;color:var(--ink-soft);margin-bottom:4px}
+    .ans-v{font-size:.875rem}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:white;padding:12px 20px;border-radius:10px;font-size:.875rem;font-weight:600;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;animation:slideUp .3s ease}
+    @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media(max-width:900px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}}
+    @media(max-width:640px){
+      .content{padding:16px}
+      .form-2col,.q-grid-3,.detail-grid{grid-template-columns:1fr}
+      .page-header{padding:16px}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div style="min-width:0">
+      <div class="sb-logo-text">Inspeq</div>
+      <div class="sb-logo-badge">Discovery Admin</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Overview</div>
+    <button class="nav-item active" id="nav-dashboard" onclick="showView('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <div class="sb-section">Content</div>
+    <button class="nav-item" id="nav-questionnaires" onclick="showView('questionnaires')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Questionnaires
+    </button>
+    <div class="sb-section">Data</div>
+    <button class="nav-item" id="nav-submissions" onclick="showView('submissions')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Submissions
+      <span class="nav-badge" id="subCount">0</span>
+    </button>
+    <div class="sb-section">Site</div>
+    <button class="nav-item" onclick="window.open('index.html','_blank')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      View Public Site
+    </button>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar">A</div>
+      <span class="sb-uname">Admin</span>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ════════════ MAIN ════════════ -->
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="view-dashboard">
+    <div class="page-header">
+      <div><div class="page-title">Dashboard</div><div class="page-sub">Overview of Discovery activity</div></div>
+      <button class="btn btn-primary" onclick="openWizard(null)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Questionnaire
+      </button>
+    </div>
+    <div class="content">
+      <div class="stats-grid" id="dashStats"></div>
+      <div class="table-wrap">
+        <div class="table-hd-row">
+          <span>Recent Submissions</span>
+          <button class="btn btn-sm btn-secondary" onclick="showView('submissions')" style="padding:5px 12px;font-size:.75rem">View all →</button>
+        </div>
+        <table><thead><tr><th>Name</th><th>Company</th><th>Questionnaire</th><th>Date</th><th></th></tr></thead>
+        <tbody id="dashSubs"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTIONNAIRES -->
+  <div id="view-questionnaires" style="display:none">
+    <div class="page-header">
+      <div><div class="page-title">Questionnaires</div><div class="page-sub">Manage your discovery questionnaires</div></div>
+      <button class="btn btn-primary" onclick="openWizard(null)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Questionnaire
+      </button>
+    </div>
+    <div class="content">
+      <div class="toolbar">
+        <input class="search-input" id="qSearch" placeholder="Search questionnaires…" oninput="renderQs()"/>
+        <select class="sel-filter" id="qCatFilter" onchange="renderQs()">
+          <option value="">All Categories</option>
+          <option>Manufacturing</option><option>Field Operations</option><option>Construction</option>
+          <option>Facility Management</option><option>Energy &amp; Utilities</option>
+          <option>Insurance</option><option>General</option><option>Automotive</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Title</th><th>Category</th><th>Questions</th><th>Sections</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="qTable"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMISSIONS -->
+  <div id="view-submissions" style="display:none">
+    <div class="page-header">
+      <div><div class="page-title">Submissions</div><div class="page-sub">All customer responses</div></div>
+    </div>
+    <div class="content">
+      <div class="toolbar">
+        <input class="search-input" id="subSearch" placeholder="Search by name or company…" oninput="renderSubs()"/>
+        <select class="sel-filter" id="subQFilter" onchange="renderSubs()">
+          <option value="">All Questionnaires</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Questionnaire</th><th>Date</th><th></th></tr></thead>
+        <tbody id="subTable"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.main -->
+</div><!-- /.layout -->
+
+
+<!-- ════════════════════════════════════════
+     WIZARD MODAL
+════════════════════════════════════════ -->
+<div class="overlay" id="wizOverlay">
+  <div class="modal" style="max-width:800px">
+
+    <div class="modal-hd">
+      <div>
+        <div class="modal-title" id="wizModalTitle">Create Questionnaire</div>
+        <div class="modal-sub">Complete all steps then publish to make it live</div>
+      </div>
+      <button class="modal-close" onclick="closeWizard()">✕</button>
+    </div>
+
+    <!-- STEP PROGRESS -->
+    <div class="wiz-steps" id="wizStepsEl">
+      <!-- rendered by JS -->
+    </div>
+
+    <!-- PANEL 0 — DETAILS -->
+    <div class="wiz-panel active" id="wp0">
+      <div class="form-2col">
+        <div class="field">
+          <label>Questionnaire Title *</label>
+          <input type="text" id="wTitle" placeholder="e.g. Customer Discovery"/>
+        </div>
+        <div class="field">
+          <label>Category *</label>
+          <select id="wCategory">
+            <option value="">Select category…</option>
+            <option>Manufacturing</option><option>Field Operations</option><option>Construction</option>
+            <option>Facility Management</option><option>Energy &amp; Utilities</option>
+            <option>Insurance</option><option>General</option><option>Automotive</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Description *</label>
+        <textarea id="wDesc" rows="3" placeholder="Describe what this questionnaire covers and who it's for…"></textarea>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-lbl">Active — visible on public site</div>
+          <div class="field-note" style="margin-top:3px">You can change this at any time after publishing</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="wActive" checked/><span class="tslider"></span></label>
+      </div>
+    </div>
+
+    <!-- PANEL 1 — SECTIONS -->
+    <div class="wiz-panel" id="wp1">
+      <p style="font-size:.875rem;color:var(--ink-muted);margin-bottom:14px">Sections group questions into themes (e.g. "Pain Points", "Commercial"). Skip this step for a flat question list.</p>
+      <div class="sec-add-row">
+        <input type="text" id="newSecInput" placeholder="e.g. Current Inspection Process" onkeydown="if(event.key==='Enter'){addSection();event.preventDefault()}"/>
+        <button class="btn btn-sm btn-primary" onclick="addSection()">+ Add</button>
+      </div>
+      <div id="sectionList"></div>
+      <p style="font-size:.75rem;color:var(--ink-muted);margin-top:10px">You'll assign questions to sections in the next step.</p>
+    </div>
+
+    <!-- PANEL 2 — QUESTIONS -->
+    <div class="wiz-panel" id="wp2">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap">
+        <p style="font-size:.875rem;color:var(--ink-muted)">Build your question list. All changes are kept as you navigate between steps.</p>
+        <button class="btn btn-sm btn-primary" onclick="addQuestion()">+ Add Question</button>
+      </div>
+      <div id="qList" style="max-height:420px;overflow-y:auto;padding-right:2px"></div>
+      <button class="q-add-btn" onclick="addQuestion()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add another question
+      </button>
+    </div>
+
+    <!-- PANEL 3 — PREVIEW -->
+    <div class="wiz-panel" id="wp3">
+      <div id="previewContent"></div>
+      <div style="margin-top:14px;background:var(--accent-light);border:1px solid rgba(37,99,235,.2);border-radius:8px;padding:12px 16px;font-size:.8125rem;color:var(--ink-soft)">
+        ✅ Looks good? Click <strong>Publish</strong> to make it live. You can edit or deactivate it any time.
+      </div>
+    </div>
+
+    <!-- MODAL FOOTER -->
+    <div class="modal-ft">
+      <button class="btn btn-sm btn-secondary" id="wizBackBtn" onclick="wizStep > 0 && gotoStep(wizStep - 1)" style="display:none">← Back</button>
+      <div class="modal-ft-spacer"></div>
+      <button class="btn btn-sm btn-secondary" onclick="closeWizard()">Cancel</button>
+      <button class="btn btn-sm btn-primary" id="wizNextBtn" onclick="wizNext()">Next →</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     SUBMISSION DETAIL MODAL
+════════════════════════════════════════ -->
+<div class="overlay" id="subOverlay">
+  <div class="modal" style="max-width:660px">
+    <div class="modal-hd">
+      <div>
+        <div class="modal-title" id="subModalTitle">Submission</div>
+        <div class="modal-sub" id="subModalDate"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('subOverlay').classList.remove('open')">✕</button>
+    </div>
+    <div id="subModalBody" style="max-height:62vh;overflow-y:auto"></div>
+    <div class="modal-ft">
+      <div class="modal-ft-spacer"></div>
+      <button class="btn btn-sm btn-secondary" onclick="document.getElementById('subOverlay').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="js/db.js"></script>
+<script>
+'use strict';
+
+// ── Auth ─────────────────────────────────────────────────
+if (!DB.isAdminLoggedIn()) window.location.href = 'admin.html';
+function logout() { DB.adminLogout(); window.location.href = 'admin.html'; }
+
+// ── View switching ────────────────────────────────────────
+function showView(name) {
+  ['dashboard','questionnaires','submissions'].forEach(v => {
+    document.getElementById('view-' + v).style.display = v === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+  if (name === 'dashboard')     renderDashboard();
+  if (name === 'questionnaires') renderQs();
+  if (name === 'submissions')   { buildSubFilter(); renderSubs(); }
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+function renderDashboard() {
+  const qs   = DB.getQuestionnaires();
+  const subs = DB.getSubmissions();
+  const active = qs.filter(q => q.is_active).length;
+  const today  = new Date().toISOString().slice(0,10);
+  const todaySubs = subs.filter(s => s.submitted_at.slice(0,10) === today).length;
+
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Questionnaires</div><div class="stat-value">${qs.length}</div><div class="stat-sub">${active} active</div></div>
+    <div class="stat-card"><div class="stat-label">Submissions</div><div class="stat-value">${subs.length}</div><div class="stat-sub">${todaySubs} today</div></div>
+    <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value">${active}</div></div>
+    <div class="stat-card"><div class="stat-label">Categories</div><div class="stat-value">${[...new Set(qs.map(q=>q.category))].length}</div></div>`;
+
+  document.getElementById('subCount').textContent = subs.length;
+
+  const recent = subs.slice(0, 8);
+  document.getElementById('dashSubs').innerHTML = !recent.length
+    ? `<tr><td colspan="5"><div class="empty"><div class="empty-icon">📭</div><p>No submissions yet</p></div></td></tr>`
+    : recent.map(s => {
+        const q = DB.getQuestionnaire(s.questionnaire_id);
+        return `<tr>
+          <td style="font-weight:600">${s.full_name}</td>
+          <td>${s.company_name}</td>
+          <td>${q ? `<span class="badge badge-blue" style="font-size:.68rem">${q.title}</span>` : '—'}</td>
+          <td style="color:var(--ink-muted)">${new Date(s.submitted_at).toLocaleDateString()}</td>
+          <td><button class="btn btn-xs btn-secondary" onclick="openSubModal('${s.id}')">View</button></td>
+        </tr>`;
+      }).join('');
+}
+
+// ── QUESTIONNAIRES ────────────────────────────────────────
+function renderQs() {
+  const search = (document.getElementById('qSearch')?.value || '').toLowerCase();
+  const catF   = document.getElementById('qCatFilter')?.value || '';
+  let qs = DB.getQuestionnaires();
+  if (search) qs = qs.filter(q => q.title.toLowerCase().includes(search) || q.category.toLowerCase().includes(search));
+  if (catF)   qs = qs.filter(q => q.category === catF);
+
+  const tbody = document.getElementById('qTable');
+  if (!qs.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📋</div><h3>No questionnaires</h3><p>Click "+ New Questionnaire" to get started.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = qs.map(q => {
+    const qArr = DB.getQuestions(q.id);
+    const secs = [...new Set(qArr.map(x => x.section || '').filter(Boolean))];
+    return `<tr>
+      <td>
+        <div style="font-weight:600;font-size:.875rem">${q.title}${q.featured ? ' <span class="badge badge-purple" style="margin-left:6px;font-size:.62rem">⭐ Featured</span>' : ''}</div>
+        <div style="font-size:.72rem;color:var(--ink-muted);margin-top:2px">/discovery?id=${q.id}</div>
+      </td>
+      <td><span class="badge badge-blue">${q.category}</span></td>
+      <td>${qArr.length}</td>
+      <td>${secs.length || '—'}</td>
+      <td><span class="badge ${q.is_active ? 'badge-green' : 'badge-gray'}">${q.is_active ? 'Active' : 'Inactive'}</span></td>
+      <td><div class="actions">
+        <button class="btn btn-xs btn-secondary" onclick="editQ('${q.id}')">Edit</button>
+        <button class="btn btn-xs ${q.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleQ('${q.id}')">${q.is_active ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn btn-xs btn-secondary" onclick="window.open('questionnaire.html?id=${q.id}','_blank')">Preview</button>
+        <button class="btn btn-xs btn-danger" onclick="deleteQ('${q.id}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleQ(id) { DB.toggleQuestionnaire(id); renderQs(); renderDashboard(); }
+function deleteQ(id) {
+  if (!confirm('Delete this questionnaire and all its questions? This cannot be undone.')) return;
+  DB.deleteQuestionnaire(id); renderQs(); renderDashboard();
+}
+function editQ(id) {
+  const q = DB.getQuestionnaire(id);
+  if (q) openWizard(q);
+}
+
+// ── SUBMISSIONS ───────────────────────────────────────────
+function buildSubFilter() {
+  const sel = document.getElementById('subQFilter');
+  sel.innerHTML = `<option value="">All Questionnaires</option>` +
+    DB.getQuestionnaires().map(q => `<option value="${q.id}">${q.title}</option>`).join('');
+}
+
+function renderSubs() {
+  const search = (document.getElementById('subSearch')?.value || '').toLowerCase();
+  const qF     = document.getElementById('subQFilter')?.value || '';
+  let subs = DB.getSubmissions();
+  if (search) subs = subs.filter(s =>
+    s.full_name.toLowerCase().includes(search) ||
+    s.company_name.toLowerCase().includes(search) ||
+    s.email.toLowerCase().includes(search));
+  if (qF) subs = subs.filter(s => s.questionnaire_id === qF);
+
+  document.getElementById('subCount').textContent = DB.getSubmissions().length;
+  const tbody = document.getElementById('subTable');
+  if (!subs.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📭</div><h3>No submissions yet</h3><p>Responses appear here once customers complete a questionnaire.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = subs.map(s => {
+    const q = DB.getQuestionnaire(s.questionnaire_id);
+    return `<tr>
+      <td style="font-weight:600">${s.full_name}</td>
+      <td>${s.company_name}</td>
+      <td style="color:var(--ink-muted);font-size:.8rem">${s.email}</td>
+      <td>${q ? `<span class="badge badge-blue" style="font-size:.65rem">${q.title}</span>` : '—'}</td>
+      <td style="color:var(--ink-muted)">${new Date(s.submitted_at).toLocaleString()}</td>
+      <td><button class="btn btn-xs btn-secondary" onclick="openSubModal('${s.id}')">View Details</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openSubModal(id) {
+  const sub = DB.getSubmission(id); if (!sub) return;
+  const q   = DB.getQuestionnaire(sub.questionnaire_id);
+  const answers = DB.getAnswers(id);
+  const qs  = q ? DB.getQuestions(q.id) : [];
+  const qMap = {};
+  qs.forEach(x => { qMap[x.id] = { label: x.label, section: x.section || '' }; });
+
+  const secs = [...new Set(qs.map(x => x.section || '').filter(Boolean))];
+  let body = '';
+
+  body += `<div class="ans-sec-hd">Customer Information</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-lbl">Full Name</div><div class="detail-val">${sub.full_name}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Company</div><div class="detail-val">${sub.company_name}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Email</div><div class="detail-val">${sub.email}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Phone</div><div class="detail-val">${sub.phone}</div></div>
+    </div>`;
+
+  if (q) body += `<div class="ans-sec-hd">Questionnaire: ${q.title}</div>`;
+
+  if (secs.length) {
+    secs.forEach(sec => {
+      const secAnswers = answers.filter(a => qMap[a.question_id]?.section === sec);
+      if (!secAnswers.length) return;
+      body += `<div class="ans-sec-hd" style="color:var(--accent)">${sec.replace(/^\d+\.\s*/, '')}</div>`;
+      body += secAnswers.map(a => `<div class="ans-item">
+        <div class="ans-q">${qMap[a.question_id]?.label || 'Question'}</div>
+        <div class="ans-v">${a.answer_value || '<em style="color:var(--ink-muted)">No answer</em>'}</div>
+      </div>`).join('');
+    });
+    const unsec = answers.filter(a => !qMap[a.question_id]?.section);
+    if (unsec.length) {
+      unsec.forEach(a => { body += `<div class="ans-item"><div class="ans-q">${qMap[a.question_id]?.label||'Q'}</div><div class="ans-v">${a.answer_value||'—'}</div></div>`; });
+    }
+  } else {
+    body += answers.map(a => `<div class="ans-item">
+      <div class="ans-q">${qMap[a.question_id]?.label || 'Question'}</div>
+      <div class="ans-v">${a.answer_value || '<em style="color:var(--ink-muted)">No answer</em>'}</div>
+    </div>`).join('') || '<p style="color:var(--ink-muted);font-size:.875rem">No answers recorded.</p>';
+  }
+
+  const uploads = DB.getUploads(id);
+  if (uploads.length) {
+    body += `<div class="ans-sec-hd">Uploaded Files</div>`;
+    body += uploads.map(u => `<div class="ans-item" style="display:flex;align-items:center;gap:8px">📎 <span style="font-size:.875rem">${u.file_name}</span></div>`).join('');
+  }
+
+  document.getElementById('subModalTitle').textContent = sub.full_name + ' — ' + sub.company_name;
+  document.getElementById('subModalDate').textContent  = 'Submitted ' + new Date(sub.submitted_at).toLocaleString();
+  document.getElementById('subModalBody').innerHTML    = body;
+  document.getElementById('subOverlay').classList.add('open');
+}
+
+
+// ══════════════════════════════════════════════════════════
+//  WIZARD
+// ══════════════════════════════════════════════════════════
+const WIZARD_STEPS = ['Details', 'Sections', 'Questions', 'Preview'];
+const FIELD_TYPES  = ['text','textarea','number','dropdown','radio','checkbox','date','file'];
+
+let wizStep      = 0;
+let wizEditId    = null;
+let wizSections  = [];   // [{name: string}]
+let wizQuestions = [];   // [{label,field_type,is_required,section,options_json}]
+
+// ── open / close ──────────────────────────────────────────
+function openWizard(existingQ) {
+  wizStep = 0;
+  wizEditId = null;
+  wizSections  = [];
+  wizQuestions = [];
+
+  if (existingQ) {
+    wizEditId = existingQ.id;
+    document.getElementById('wTitle').value    = existingQ.title       || '';
+    document.getElementById('wCategory').value = existingQ.category    || '';
+    document.getElementById('wDesc').value     = existingQ.description || '';
+    document.getElementById('wActive').checked = !!existingQ.is_active;
+
+    const existingQs = DB.getQuestions(existingQ.id);
+    const uniqueSecs = [...new Set(existingQs.map(q => q.section || '').filter(Boolean))];
+    wizSections  = uniqueSecs.map(s => ({ name: s }));
+    wizQuestions = existingQs.map(q => ({ ...q }));
+
+    document.getElementById('wizModalTitle').textContent = 'Edit Questionnaire';
+  } else {
+    document.getElementById('wTitle').value    = '';
+    document.getElementById('wCategory').value = '';
+    document.getElementById('wDesc').value     = '';
+    document.getElementById('wActive').checked = true;
+    document.getElementById('wizModalTitle').textContent = 'Create Questionnaire';
+  }
+
+  gotoStep(0);
+  document.getElementById('wizOverlay').classList.add('open');
+}
+
+function closeWizard() {
+  document.getElementById('wizOverlay').classList.remove('open');
+}
+
+// ── step navigation ───────────────────────────────────────
+function gotoStep(n) {
+  wizStep = n;
+
+  // step indicators
+  const stepsEl = document.getElementById('wizStepsEl');
+  stepsEl.innerHTML = WIZARD_STEPS.map((label, i) => {
+    const cls = i < n ? 'done' : i === n ? 'active' : '';
+    const numText = i < n ? '✓' : String(i + 1);
+    const connector = i < WIZARD_STEPS.length - 1
+      ? `<div class="wiz-connector${i < n ? ' done' : ''}"></div>`
+      : '';
+    return `<div class="wiz-step-item ${cls}">
+      <div class="wiz-num">${numText}</div>
+      <div class="wiz-lbl">${label}</div>
+    </div>${connector}`;
+  }).join('');
+
+  // panels
+  [0,1,2,3].forEach(i => {
+    document.getElementById('wp' + i).classList.toggle('active', i === n);
+  });
+
+  // buttons
+  document.getElementById('wizBackBtn').style.display = n > 0 ? 'flex' : 'none';
+  const nextBtn = document.getElementById('wizNextBtn');
+  nextBtn.textContent = n === 3 ? 'Publish →' : 'Next →';
+
+  // render dynamic panels
+  if (n === 1) renderSectionList();
+  if (n === 2) renderQList();
+  if (n === 3) renderPreview();
+}
+
+function wizNext() {
+  // validate step 0
+  if (wizStep === 0) {
+    const t = document.getElementById('wTitle').value.trim();
+    const c = document.getElementById('wCategory').value;
+    const d = document.getElementById('wDesc').value.trim();
+    if (!t || !c || !d) {
+      alert('Please fill in the title, category and description before continuing.');
+      return;
+    }
+  }
+  // publish on step 3
+  if (wizStep === 3) { publishWizard(); return; }
+  gotoStep(wizStep + 1);
+}
+
+// ── STEP 1: sections ──────────────────────────────────────
+function addSection() {
+  const inp = document.getElementById('newSecInput');
+  const raw = inp.value.trim();
+  if (!raw) return;
+  const num  = wizSections.length + 1;
+  const name = `${num}. ${raw}`;
+  wizSections.push({ name });
+  inp.value = '';
+  renderSectionList();
+}
+
+function removeSection(i) {
+  const gone = wizSections[i].name;
+  wizSections.splice(i, 1);
+  wizQuestions = wizQuestions.map(q => q.section === gone ? { ...q, section: '' } : q);
+  renderSectionList();
+}
+
+function renderSectionList() {
+  const el = document.getElementById('sectionList');
+  if (!wizSections.length) {
+    el.innerHTML = `<div class="sec-empty">No sections added — your questionnaire will have a flat question list.</div>`;
+    return;
+  }
+  el.innerHTML = wizSections.map((s, i) => {
+    const qCount = wizQuestions.filter(q => q.section === s.name).length;
+    return `<div class="sec-item">
+      <span class="sec-handle">⠿</span>
+      <span class="sec-num">${i + 1}</span>
+      <span class="sec-name">${s.name.replace(/^\d+\.\s*/, '')}</span>
+      <span class="sec-qcount">${qCount} q</span>
+      <button class="sec-del" onclick="removeSection(${i})" title="Remove section">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── STEP 2: questions ─────────────────────────────────────
+function addQuestion() {
+  wizQuestions.push({
+    id: '', label: '', field_type: 'text',
+    is_required: true,
+    section: wizSections[0]?.name || '',
+    options_json: null,
+  });
+  renderQList();
+  setTimeout(() => {
+    const list = document.getElementById('qList');
+    list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 80);
+}
+
+function removeQuestion(i) {
+  wizQuestions.splice(i, 1);
+  renderQList();
+}
+
+function onQFieldChange(i, field, val) {
+  wizQuestions[i][field] = val;
+  if (field === 'field_type') {
+    const needsOpts = ['dropdown','radio','checkbox'].includes(val);
+    if (needsOpts && !wizQuestions[i].options_json) wizQuestions[i].options_json = '[]';
+    if (!needsOpts) wizQuestions[i].options_json = null;
+    renderQList();
+  }
+}
+
+function onQOptsChange(i, text) {
+  const opts = text.split('\n').map(s => s.trim()).filter(Boolean);
+  wizQuestions[i].options_json = JSON.stringify(opts);
+}
+
+function renderQList() {
+  const list = document.getElementById('qList');
+  if (!wizQuestions.length) {
+    list.innerHTML = `<div style="padding:32px;text-align:center;color:var(--ink-muted);font-size:.875rem;background:var(--surface-2);border-radius:var(--r-sm)">No questions yet. Click "+ Add Question" to begin.</div>`;
+    return;
+  }
+
+  const secOptions = wizSections
+    .map(s => `<option value="${s.name}">${s.name.replace(/^\d+\.\s*/, '')}</option>`)
+    .join('');
+
+  list.innerHTML = wizQuestions.map((q, i) => {
+    const needsOpts = ['dropdown','radio','checkbox'].includes(q.field_type);
+    const opts      = q.options_json ? JSON.parse(q.options_json) : [];
+    const safeLabel = (q.label || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+    return `<div class="q-item">
+      <div class="q-item-hd">
+        <span class="q-drag">⠿</span>
+        <span class="q-num">${i + 1}</span>
+        <span class="q-type-pill">${q.field_type}</span>
+        ${q.section ? `<span class="q-sec-pill">${q.section.replace(/^\d+\.\s*/, '')}</span>` : ''}
+        <button class="q-del" onclick="removeQuestion(${i})" title="Remove question">✕</button>
+      </div>
+
+      <div class="q-grid-3">
+        <div class="field">
+          <label>Question label *</label>
+          <input type="text" value="${safeLabel}"
+            oninput="wizQuestions[${i}].label = this.value"
+            placeholder="e.g. What type of manufacturing do you run?"/>
+        </div>
+        <div class="field">
+          <label>Field type</label>
+          <select onchange="onQFieldChange(${i}, 'field_type', this.value)">
+            ${FIELD_TYPES.map(t => `<option value="${t}"${q.field_type === t ? ' selected' : ''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Required?</label>
+          <select onchange="onQFieldChange(${i}, 'is_required', this.value === 'true')">
+            <option value="true"${q.is_required  ? ' selected' : ''}>Required</option>
+            <option value="false"${!q.is_required ? ' selected' : ''}>Optional</option>
+          </select>
+        </div>
+      </div>
+
+      ${wizSections.length ? `
+        <div class="field">
+          <label>Section</label>
+          <select onchange="wizQuestions[${i}].section = this.value">
+            <option value="">— No section —</option>
+            ${wizSections.map(s =>
+              `<option value="${s.name}"${q.section === s.name ? ' selected' : ''}>${s.name.replace(/^\d+\.\s*/, '')}</option>`
+            ).join('')}
+          </select>
+        </div>` : ''}
+
+      ${needsOpts ? `
+        <div class="field">
+          <label>Options <span style="font-weight:400;color:var(--ink-muted)">(one per line)</span></label>
+          <textarea rows="3"
+            oninput="onQOptsChange(${i}, this.value)"
+            placeholder="Option A&#10;Option B&#10;Option C">${opts.join('\n')}</textarea>
+        </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── STEP 3: preview ───────────────────────────────────────
+function renderPreview() {
+  const title    = document.getElementById('wTitle').value.trim();
+  const category = document.getElementById('wCategory').value;
+  const desc     = document.getElementById('wDesc').value.trim();
+  const active   = document.getElementById('wActive').checked;
+
+  const usedSecs = [...new Set(wizQuestions.map(q => q.section || '').filter(Boolean))];
+  const mins     = Math.max(2, Math.ceil(wizQuestions.length * 0.65));
+
+  let bodyHtml = '';
+
+  if (usedSecs.length) {
+    usedSecs.forEach(sec => {
+      const sQs = wizQuestions.filter(q => q.section === sec);
+      bodyHtml += `<div class="preview-sec-title">${sec.replace(/^\d+\.\s*/, '')}</div>`;
+      bodyHtml += sQs.map(q => {
+        const opts = q.options_json ? JSON.parse(q.options_json) : [];
+        return `<div class="preview-q">
+          <div class="preview-q-lbl">${wizQuestions.indexOf(q) + 1}. ${q.label || '(no label)'}</div>
+          <div class="preview-q-tags">
+            <span class="q-tag" style="background:var(--accent-light);color:var(--accent)">${q.field_type}</span>
+            <span class="q-tag" style="background:${q.is_required ? '#FFF7ED' : 'var(--surface-3)'};color:${q.is_required ? '#C2410C' : 'var(--ink-muted)'}">${q.is_required ? 'Required' : 'Optional'}</span>
+            ${opts.length ? `<span class="q-tag" style="background:var(--surface-3);color:var(--ink-muted)">${opts.length} options</span>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    });
+    // unsectioned
+    wizQuestions.filter(q => !q.section).forEach(q => {
+      bodyHtml += `<div class="preview-q">
+        <div class="preview-q-lbl">${wizQuestions.indexOf(q) + 1}. ${q.label || '(no label)'}</div>
+        <div class="preview-q-tags">
+          <span class="q-tag" style="background:var(--surface-3);color:var(--ink-muted)">No section</span>
+        </div>
+      </div>`;
+    });
+  } else {
+    bodyHtml = wizQuestions.map((q, i) => `
+      <div class="preview-q">
+        <div class="preview-q-lbl">${i + 1}. ${q.label || '(no label)'}</div>
+        <div class="preview-q-tags">
+          <span class="q-tag" style="background:var(--accent-light);color:var(--accent)">${q.field_type}</span>
+          <span class="q-tag" style="background:${q.is_required ? '#FFF7ED' : 'var(--surface-3)'};color:${q.is_required ? '#C2410C' : 'var(--ink-muted)'}">${q.is_required ? 'Required' : 'Optional'}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  if (!bodyHtml) bodyHtml = '<p style="color:var(--ink-muted);font-size:.875rem;padding:12px 0">No questions added yet.</p>';
+
+  document.getElementById('previewContent').innerHTML = `
+    <div class="preview-card">
+      <div class="preview-cat">${category || '—'}</div>
+      <div class="preview-title">${title || 'Untitled'}</div>
+      <div class="preview-desc">${desc || 'No description'}</div>
+      <div class="preview-meta">
+        <span>⏱ ~${mins} min</span>
+        <span>✅ ${wizQuestions.length} questions</span>
+        ${usedSecs.length ? `<span>📑 ${usedSecs.length} sections</span>` : ''}
+        <span style="color:${active ? '#6EE7B7' : '#FCA5A5'}">${active ? '● Active' : '○ Inactive'}</span>
+      </div>
+    </div>
+    <div class="preview-body">${bodyHtml}</div>`;
+}
+
+// ── publish ───────────────────────────────────────────────
+function publishWizard() {
+  const title    = document.getElementById('wTitle').value.trim();
+  const category = document.getElementById('wCategory').value;
+  const desc     = document.getElementById('wDesc').value.trim();
+
+  if (!wizQuestions.length) {
+    alert('Please add at least one question before publishing.');
+    gotoStep(2); return;
+  }
+  if (wizQuestions.some(q => !q.label.trim())) {
+    alert('Some questions have no label. Please fill in all question labels.');
+    gotoStep(2); return;
+  }
+
+  const data = {
+    id:          wizEditId || undefined,
+    title, category,
+    description: desc,
+    is_active:   document.getElementById('wActive').checked,
+  };
+  const saved = DB.saveQuestionnaire(data);
+  const qId   = wizEditId || saved?.id;
+  if (qId) DB.saveQuestions(qId, wizQuestions);
+
+  closeWizard();
+  renderQs();
+  renderDashboard();
+
+  // toast
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = '✅ Questionnaire published!';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── backdrop close ────────────────────────────────────────
+document.getElementById('wizOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('wizOverlay')) closeWizard();
+});
+document.getElementById('subOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('subOverlay'))
+    document.getElementById('subOverlay').classList.remove('open');
+});
+
+// ── init ─────────────────────────────────────────────────
+renderDashboard();
+gotoStep(0); // draw initial wizard step indicators (modal is hidden)
+</script>
+</body>
+</html>

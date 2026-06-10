@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login | Inspeq Discovery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --ink: #0A0F1E; --surface: #FFFFFF; --surface-2: #F8F9FC; --border: #E5E8F0;
+      --accent: #2563EB; --accent-dark: #1D4ED8; --accent-light: #EFF4FF;
+      --danger: #EF4444; --radius: 12px; --radius-sm: 8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(160deg, #0A0F1E 0%, #0F1A3A 60%, #0D2151 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; -webkit-font-smoothing: antialiased; }
+
+    .login-card { background: white; border-radius: 20px; padding: 48px 44px; width: 100%; max-width: 420px; box-shadow: 0 24px 80px rgba(0,0,0,0.3); }
+
+    .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; }
+    .login-logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #2563EB, #0EA5E9); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .login-logo-icon svg { width: 22px; height: 22px; fill: white; }
+    .login-logo-text { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.02em; color: var(--ink); }
+    .login-logo-badge { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); border-radius: 4px; padding: 2px 7px; }
+
+    .login-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .login-sub { font-size: 0.9rem; color: #6B7280; margin-bottom: 32px; }
+
+    .field { margin-bottom: 18px; }
+    label { display: block; font-size: 0.8125rem; font-weight: 600; color: #3D4460; margin-bottom: 7px; }
+    input { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 11px 14px; font-size: 0.9375rem; font-family: inherit; color: var(--ink); background: white; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+    input.err { border-color: var(--danger); }
+
+    .error-msg { background: #FFF1F2; border: 1px solid #FEE2E2; border-radius: 8px; padding: 10px 14px; font-size: 0.8125rem; color: var(--danger); margin-bottom: 18px; display: none; }
+    .error-msg.show { display: block; }
+
+    .btn { width: 100%; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); padding: 13px; font-size: 0.9375rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.15s; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn:hover { background: var(--accent-dark); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .back-link { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 20px; font-size: 0.8125rem; color: #6B7280; text-decoration: none; }
+    .back-link:hover { color: var(--accent); }
+
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-logo">
+    <div class="login-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="login-logo-text">Inspeq</span>
+    <span class="login-logo-badge">Admin</span>
+  </div>
+
+  <h1 class="login-title">Sign in</h1>
+  <p class="login-sub">Access the Discovery admin panel</p>
+
+  <div class="error-msg" id="errorMsg">Incorrect username or password. Please try again.</div>
+
+  <form onsubmit="handleLogin(event)" novalidate>
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="admin" autocomplete="username" required/>
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required/>
+    </div>
+    <button type="submit" class="btn" id="loginBtn">Sign in</button>
+  </form>
+
+  <a class="back-link" href="index.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Discovery
+  </a>
+</div>
+
+<script src="js/db.js"></script>
+<script>
+  if (DB.isAdminLoggedIn()) window.location.href = 'admin-panel.html';
+
+  function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const err = document.getElementById('errorMsg');
+    err.classList.remove('show');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+
+    setTimeout(() => {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      const token = DB.adminLogin(u, p);
+      if (token) {
+        window.location.href = 'admin-panel.html';
+      } else {
+        err.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    }, 600);
+  }
+</script>
+</body>
+</html>
