@@ -1,438 +1,324 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel | Inspeq Discovery</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    :root{
-      --ink:#0A0F1E;--ink-soft:#3D4460;--ink-muted:#6B7280;
-      --surface:#fff;--surface-2:#F8F9FC;--surface-3:#F0F2F8;
-      --border:#E5E8F0;--accent:#2563EB;--accent-dark:#1D4ED8;
-      --accent-light:#EFF4FF;--accent-2:#0EA5E9;
-      --success:#10B981;--success-bg:#ECFDF5;
-      --danger:#EF4444;--danger-bg:#FFF1F2;
-      --warning:#F59E0B;--warning-bg:#FFFBEB;
-      --r:12px;--r-sm:8px;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',sans-serif;background:var(--surface-2);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100vh}
-    .layout{display:flex;min-height:100vh}
-    .sidebar{width:240px;flex-shrink:0;background:var(--ink);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;display:flex;flex-direction:column}
-    .main{flex:1;margin-left:240px}
-    /* SIDEBAR */
-    .sb-logo{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
-    .sb-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .sb-logo-icon svg{width:17px;height:17px;fill:white}
-    .sb-logo-text{color:white;font-weight:700;font-size:1rem}
-    .sb-logo-badge{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#60A5FA;background:rgba(37,99,235,.25);border-radius:4px;padding:2px 6px;white-space:nowrap}
-    .sb-nav{padding:14px 12px;flex:1}
-    .sb-section{font-size:.65rem;font-weight:700;color:#475569;letter-spacing:.1em;text-transform:uppercase;padding:0 8px;margin:18px 0 6px}
-    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:#94A3B8;font-size:.875rem;font-weight:500;cursor:pointer;transition:all .15s;user-select:none;border:none;background:none;width:100%;text-align:left;font-family:inherit}
-    .nav-item:hover{color:white;background:rgba(255,255,255,.06)}
-    .nav-item.active{color:white;background:rgba(37,99,235,.25)}
-    .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.6}
-    .nav-item.active svg{opacity:1}
-    .nav-badge{margin-left:auto;background:var(--accent);color:white;font-size:.65rem;font-weight:700;border-radius:10px;padding:2px 7px;min-width:20px;text-align:center}
-    .sb-footer{padding:14px 12px;border-top:1px solid rgba(255,255,255,.07)}
-    .sb-user{display:flex;align-items:center;gap:10px;padding:10px 12px}
-    .sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:white;flex-shrink:0}
-    .sb-uname{font-size:.8125rem;color:#94A3B8;flex:1}
-    .logout-btn{font-size:.75rem;color:#64748B;cursor:pointer;background:none;border:none;font-family:inherit;transition:color .15s}
-    .logout-btn:hover{color:var(--danger)}
-    /* PAGE */
-    .page-header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-    .page-title{font-size:1.25rem;font-weight:800;letter-spacing:-.02em}
-    .page-sub{font-size:.8125rem;color:var(--ink-muted);margin-top:2px}
-    .content{padding:28px 32px}
-    /* STATS */
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:28px}
-    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
-    .stat-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:8px}
-    .stat-value{font-size:2rem;font-weight:800;letter-spacing:-.03em}
-    .stat-sub{font-size:.75rem;color:var(--success);margin-top:4px}
-    /* TOOLBAR */
-    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-    .search-input{flex:1;min-width:180px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s}
-    .search-input:focus{border-color:var(--accent)}
-    .sel-filter{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
-    /* BUTTONS */
-    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:.875rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap;text-decoration:none}
-    .btn-sm{padding:7px 14px;font-size:.8125rem}
-    .btn-xs{padding:5px 10px;font-size:.75rem}
-    .btn-primary{background:var(--accent);color:white}
-    .btn-primary:hover{background:var(--accent-dark)}
-    .btn-secondary{background:var(--surface);color:var(--ink-soft);border:1.5px solid var(--border)}
-    .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
-    .btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid #FECACA}
-    .btn-danger:hover{background:#FEE2E2}
-    .btn-success{background:var(--success-bg);color:var(--success);border:1px solid #A7F3D0}
-    .btn-success:hover{background:#D1FAE5}
-    .btn-warning{background:var(--warning-bg);color:#92400E;border:1px solid #FDE68A}
-    .btn-warning:hover{background:#FEF3C7}
-    /* TABLE */
-    .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-    .table-hd-row{padding:14px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-    table{width:100%;border-collapse:collapse}
-    thead tr{background:var(--surface-2);border-bottom:1px solid var(--border)}
-    th{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);padding:11px 16px;text-align:left;white-space:nowrap}
-    td{padding:12px 16px;font-size:.875rem;border-bottom:1px solid var(--surface-3);vertical-align:middle}
-    tr:last-child td{border-bottom:none}
-    tr:hover td{background:var(--surface-2)}
-    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:600;white-space:nowrap}
-    .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
-    .badge-green{background:var(--success-bg);color:#065F46}
-    .badge-gray{background:var(--surface-3);color:var(--ink-soft)}
-    .badge-blue{background:var(--accent-light);color:#1E40AF}
-    .badge-purple{background:#F5F3FF;color:#6D28D9}
-    .actions{display:flex;gap:5px;flex-wrap:wrap}
-    /* URL BOX */
-    .url-box{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;max-width:380px}
-    .url-box-text{font-size:.72rem;color:var(--ink-muted);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .url-copy-btn{flex-shrink:0;background:var(--accent-light);border:none;color:var(--accent);border-radius:5px;padding:4px 9px;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
-    .url-copy-btn:hover{background:var(--accent);color:white}
-    .url-copy-btn.copied{background:var(--success-bg);color:var(--success)}
-    /* REPORTS */
-    .reports-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;margin-bottom:28px}
-    .report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px}
-    .report-card-title{font-size:.875rem;font-weight:700;color:var(--ink);margin-bottom:4px}
-    .report-card-sub{font-size:.75rem;color:var(--ink-muted);margin-bottom:16px}
-    .chart-wrap{position:relative;height:200px;display:flex;align-items:center;justify-content:center}
-    .pie-svg{overflow:visible}
-    .bar-wrap{display:flex;flex-direction:column;gap:8px;width:100%}
-    .bar-row{display:flex;align-items:center;gap:8px}
-    .bar-label{font-size:.72rem;color:var(--ink-soft);width:160px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
-    .bar-track{flex:1;height:22px;background:var(--surface-3);border-radius:4px;overflow:hidden}
-    .bar-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding-left:8px}
-    .bar-count{font-size:.7rem;font-weight:700;color:white;white-space:nowrap}
-    .bar-pct{font-size:.7rem;color:var(--ink-muted);width:36px;text-align:right;flex-shrink:0}
-    .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-    .legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--ink-soft)}
-    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    /* EMPTY */
-    .empty{text-align:center;padding:56px 24px;color:var(--ink-muted)}
-    .empty-icon{font-size:2.25rem;margin-bottom:12px;opacity:.35}
-    .empty h3{font-size:.9375rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
-    .empty p{font-size:.85rem}
-    /* OVERLAY/MODAL */
-    .overlay{position:fixed;inset:0;background:rgba(10,15,30,.55);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .2s}
-    .overlay.open{opacity:1;pointer-events:all}
-    .modal{background:var(--surface);border-radius:16px;width:100%;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,.3);transform:translateY(16px);transition:transform .2s}
-    .overlay.open .modal{transform:translateY(0)}
-    .modal-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
-    .modal-title{font-size:1.125rem;font-weight:800;letter-spacing:-.01em}
-    .modal-sub{font-size:.8rem;color:var(--ink-muted);margin-top:3px}
-    .modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface-3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem;transition:background .15s}
-    .modal-close:hover{background:var(--border)}
-    .modal-ft{display:flex;align-items:center;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
-    .modal-ft-spacer{flex:1}
-    /* WIZARD STEPS */
-    .wiz-steps{display:flex;align-items:center;margin-bottom:28px}
-    .wiz-step-item{display:flex;align-items:center;gap:8px}
-    .wiz-step-item .wiz-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--surface);color:var(--ink-muted);font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-    .wiz-step-item .wiz-lbl{font-size:.75rem;font-weight:600;color:var(--ink-muted);white-space:nowrap;transition:color .2s}
-    .wiz-step-item.active .wiz-num{border-color:var(--accent);background:var(--accent);color:white}
-    .wiz-step-item.active .wiz-lbl{color:var(--accent)}
-    .wiz-step-item.done .wiz-num{border-color:var(--success);background:var(--success);color:white}
-    .wiz-step-item.done .wiz-lbl{color:var(--success)}
-    .wiz-connector{flex:1;height:2px;background:var(--border);min-width:20px;transition:background .2s}
-    .wiz-connector.done{background:var(--success)}
-    .wiz-panel{display:none}
-    .wiz-panel.active{display:block}
-    /* FORM */
-    .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .field{margin-bottom:16px}
-    .field:last-child{margin-bottom:0}
-    .field label{display:block;font-size:.8125rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
-    .field input,.field textarea,.field select{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:.9rem;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s;appearance:none;-webkit-appearance:none}
-    .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-    .field textarea{resize:vertical;min-height:80px}
-    .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
-    .field-note{font-size:.75rem;color:var(--ink-muted);margin-top:4px}
-    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface-2);border-radius:var(--r-sm);border:1px solid var(--border)}
-    .toggle-lbl{font-size:.875rem;font-weight:500}
-    .toggle{position:relative;width:40px;height:22px;flex-shrink:0}
-    .toggle input{display:none}
-    .tslider{position:absolute;inset:0;background:var(--border);border-radius:100px;cursor:pointer;transition:background .2s}
-    .tslider::before{content:'';position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.15)}
-    .toggle input:checked+.tslider{background:var(--success)}
-    .toggle input:checked+.tslider::before{transform:translateX(18px)}
-    /* SECTION BUILDER */
-    .sec-add-row{display:flex;gap:8px;margin-bottom:12px}
-    .sec-add-row input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);outline:none;transition:border-color .15s;background:var(--surface)}
-    .sec-add-row input:focus{border-color:var(--accent)}
-    .sec-empty{padding:20px;text-align:center;background:var(--surface-2);border-radius:var(--r-sm);border:1px dashed var(--border);color:var(--ink-muted);font-size:.875rem}
-    .sec-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
-    .sec-handle{color:var(--ink-muted);cursor:grab;font-size:1rem;flex-shrink:0}
-    .sec-num{width:22px;height:22px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .sec-name{flex:1;font-size:.875rem;font-weight:600;color:var(--ink)}
-    .sec-qcount{font-size:.75rem;color:var(--ink-muted)}
-    .sec-del{background:var(--danger-bg);border:none;color:var(--danger);width:24px;height:24px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:background .15s;flex-shrink:0}
-    .sec-del:hover{background:#FEE2E2}
-    /* QUESTION BUILDER */
-    .q-item{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:10px}
-    .q-item-hd{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-    .q-drag{color:var(--ink-muted);cursor:grab;font-size:1rem;flex-shrink:0}
-    .q-num{width:22px;height:22px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .q-type-pill{font-size:.65rem;font-weight:700;background:var(--surface-3);border:1px solid var(--border);color:var(--ink-soft);border-radius:4px;padding:2px 7px;text-transform:uppercase;letter-spacing:.04em}
-    .q-sec-pill{font-size:.65rem;font-weight:700;color:var(--accent);background:var(--accent-light);border-radius:4px;padding:2px 7px}
-    .q-del{margin-left:auto;background:var(--danger-bg);border:none;color:var(--danger);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.875rem;transition:background .15s;flex-shrink:0}
-    .q-del:hover{background:#FEE2E2}
-    .q-grid-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}
-    .q-item .field{margin-bottom:10px}
-    .q-item .field:last-child{margin-bottom:0}
-    .q-add-btn{width:100%;padding:11px;border:2px dashed var(--border);border-radius:var(--r-sm);background:transparent;color:var(--ink-soft);font-size:.875rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px}
-    .q-add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
-    /* PREVIEW */
-    .preview-card{background:linear-gradient(135deg,#0A0F1E,#0F1A3A);border-radius:12px;padding:22px 26px;margin-bottom:16px}
-    .preview-cat{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#93C5FD;margin-bottom:8px}
-    .preview-title{font-size:1.25rem;font-weight:800;color:white;margin-bottom:6px}
-    .preview-desc{font-size:.875rem;color:#94A3B8;line-height:1.5}
-    .preview-meta{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
-    .preview-meta span{font-size:.75rem;color:#7DD3FC}
-    .preview-body{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;max-height:380px;overflow-y:auto}
-    .preview-sec-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px}
-    .preview-q{padding:8px 0;border-bottom:1px solid var(--surface-3)}
-    .preview-q:last-child{border-bottom:none}
-    .preview-q-lbl{font-size:.875rem;font-weight:500;color:var(--ink-soft)}
-    .preview-q-tags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
-    .q-tag{font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:4px}
-    /* SUBMISSION DETAIL */
-    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-    .detail-item{background:var(--surface-2);border-radius:8px;padding:12px}
-    .detail-lbl{font-size:.7rem;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-    .detail-val{font-size:.875rem;font-weight:500}
-    .ans-sec-hd{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-    .ans-item{background:var(--surface-2);border-radius:8px;padding:12px;margin-bottom:8px}
-    .ans-q{font-size:.8rem;font-weight:600;color:var(--ink-soft);margin-bottom:4px}
-    .ans-v{font-size:.875rem}
-    /* TABS */
-    .tab-bar{display:flex;gap:2px;background:var(--surface-3);border-radius:10px;padding:4px;display:inline-flex;margin-bottom:20px}
-    .tab-btn{padding:7px 18px;border-radius:7px;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--ink-soft);border:none;background:transparent;font-family:inherit}
-    .tab-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
-    /* TOAST */
-    .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:white;padding:12px 20px;border-radius:10px;font-size:.875rem;font-weight:600;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;animation:slideUp .3s ease}
-    @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @media(max-width:900px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}}
-    @media(max-width:640px){.content{padding:16px}.form-2col,.q-grid-3,.detail-grid{grid-template-columns:1fr}.page-header{padding:16px}}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Panel | Inspeq Discovery</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--ink:#0A0F1E;--ink-soft:#3D4460;--ink-muted:#6B7280;--surface:#fff;--bg:#F8F9FC;--bg2:#F0F2F8;--border:#E5E8F0;--accent:#2563EB;--accent-d:#1D4ED8;--accent-l:#EFF4FF;--accent2:#0EA5E9;--ok:#10B981;--ok-bg:#ECFDF5;--err:#EF4444;--err-bg:#FFF1F2;--warn:#F59E0B;--warn-bg:#FFFBEB;--r:12px;--rs:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100vh}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:240px;flex-shrink:0;background:var(--ink);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;display:flex;flex-direction:column}
+.main{flex:1;margin-left:240px}
+.sb-logo{padding:20px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
+.sb-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-logo-icon svg{width:17px;height:17px;fill:white}
+.sb-logo-text{color:white;font-weight:700;font-size:1rem}
+.sb-badge{font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#60A5FA;background:rgba(37,99,235,.25);border-radius:4px;padding:2px 5px}
+.sb-nav{padding:12px;flex:1}
+.sb-sec{font-size:.62rem;font-weight:700;color:#475569;letter-spacing:.1em;text-transform:uppercase;padding:0 8px;margin:16px 0 5px}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:#94A3B8;font-size:.875rem;font-weight:500;cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.ni:hover{color:white;background:rgba(255,255,255,.06)}
+.ni.active{color:white;background:rgba(37,99,235,.25)}
+.ni svg{width:16px;height:16px;flex-shrink:0;opacity:.6}
+.ni.active svg{opacity:1}
+.ni-badge{margin-left:auto;background:var(--accent);color:white;font-size:.65rem;font-weight:700;border-radius:10px;padding:2px 7px;min-width:20px;text-align:center}
+.sb-foot{padding:12px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-user{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.sb-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:white;flex-shrink:0}
+.sb-un{font-size:.8125rem;color:#94A3B8;flex:1}
+.logout{font-size:.75rem;color:#64748B;cursor:pointer;background:none;border:none;font-family:inherit}
+.logout:hover{color:var(--err)}
+.ph{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.pt{font-size:1.25rem;font-weight:800;letter-spacing:-.02em}
+.ps{font-size:.8125rem;color:var(--ink-muted);margin-top:2px}
+.content{padding:28px 32px}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:28px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.sl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:8px}
+.sv{font-size:2rem;font-weight:800;letter-spacing:-.03em}
+.ss{font-size:.75rem;color:var(--ok);margin-top:4px}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.si{flex:1;min-width:180px;border:1.5px solid var(--border);border-radius:var(--rs);padding:9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s}
+.si:focus{border-color:var(--accent)}
+.sf{border:1.5px solid var(--border);border-radius:var(--rs);padding:9px 36px 9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 11px center;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rs);font-size:.875rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap}
+.bs{padding:7px 14px;font-size:.8125rem}
+.bx{padding:5px 10px;font-size:.75rem}
+.bp{background:var(--accent);color:white}.bp:hover{background:var(--accent-d)}
+.b2{background:var(--surface);color:var(--ink-soft);border:1.5px solid var(--border)}.b2:hover{border-color:var(--accent);color:var(--accent)}
+.bd{background:var(--err-bg);color:var(--err);border:1px solid #FECACA}.bd:hover{background:#FEE2E2}
+.bg{background:var(--ok-bg);color:var(--ok);border:1px solid #A7F3D0}.bg:hover{background:#D1FAE5}
+.bw{background:var(--warn-bg);color:#92400E;border:1px solid #FDE68A}.bw:hover{background:#FEF3C7}
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.thdr{padding:13px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--bg);border-bottom:1px solid var(--border)}
+th{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);padding:11px 16px;text-align:left;white-space:nowrap}
+td{padding:12px 16px;font-size:.875rem;border-bottom:1px solid var(--bg2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:600;white-space:nowrap}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+.bgrn{background:var(--ok-bg);color:#065F46}
+.bgry{background:var(--bg2);color:var(--ink-soft)}
+.bblu{background:var(--accent-l);color:#1E40AF}
+.bpur{background:#F5F3FF;color:#6D28D9}
+.acts{display:flex;gap:5px;flex-wrap:wrap}
+.urlbox{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:6px 10px;max-width:320px}
+.urltxt{font-size:.68rem;color:var(--ink-muted);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copybtn{flex-shrink:0;background:var(--accent-l);border:none;color:var(--accent);border-radius:4px;padding:3px 8px;font-size:.68rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.copybtn:hover{background:var(--accent);color:white}
+.copybtn.done{background:var(--ok-bg);color:var(--ok)}
+.rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:28px}
+.rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.rct{font-size:.875rem;font-weight:700;color:var(--ink);margin-bottom:3px}
+.rcs{font-size:.75rem;color:var(--ink-muted);margin-bottom:14px}
+.bwrap{display:flex;flex-direction:column;gap:7px}
+.brow{display:flex;align-items:center;gap:8px}
+.blbl{font-size:.7rem;color:var(--ink-soft);width:140px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.btrack{flex:1;height:20px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.bfill{height:100%;border-radius:4px;transition:width .5s;display:flex;align-items:center;padding-left:7px}
+.bcnt{font-size:.68rem;font-weight:700;color:white;white-space:nowrap}
+.bpct{font-size:.7rem;color:var(--ink-muted);width:34px;text-align:right;flex-shrink:0}
+.empty{text-align:center;padding:56px 24px;color:var(--ink-muted)}
+.empty-icon{font-size:2.25rem;margin-bottom:12px;opacity:.35}
+.empty h3{font-size:.9375rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.empty p{font-size:.85rem}
+.ov{position:fixed;inset:0;background:rgba(10,15,30,.55);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .2s}
+.ov.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:16px;width:100%;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,.3);transform:translateY(16px);transition:transform .2s}
+.ov.open .modal{transform:translateY(0)}
+.mhd{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.mt{font-size:1.125rem;font-weight:800;letter-spacing:-.01em}
+.msub{font-size:.8rem;color:var(--ink-muted);margin-top:3px}
+.mcls{width:32px;height:32px;border-radius:8px;background:var(--bg2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem;transition:background .15s}
+.mcls:hover{background:var(--border)}
+.mft{display:flex;align-items:center;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.msp{flex:1}
+.ws{display:flex;align-items:center;margin-bottom:28px}
+.wi{display:flex;align-items:center;gap:8px}
+.wn{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--surface);color:var(--ink-muted);font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.wl{font-size:.75rem;font-weight:600;color:var(--ink-muted);white-space:nowrap;transition:color .2s}
+.wi.on .wn{border-color:var(--accent);background:var(--accent);color:white}
+.wi.on .wl{color:var(--accent)}
+.wi.done .wn{border-color:var(--ok);background:var(--ok);color:white}
+.wi.done .wl{color:var(--ok)}
+.wc{flex:1;height:2px;background:var(--border);min-width:20px;transition:background .2s}
+.wc.done{background:var(--ok)}
+.wp{display:none}
+.wp.on{display:block}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fld{margin-bottom:16px}
+.fld:last-child{margin-bottom:0}
+.fld label{display:block;font-size:.8125rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.fld input,.fld textarea,.fld select{width:100%;border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-size:.9rem;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none}
+.fld input:focus,.fld textarea:focus,.fld select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.fld textarea{resize:vertical;min-height:80px}
+.fld select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.fnote{font-size:.75rem;color:var(--ink-muted);margin-top:4px}
+.trow{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--bg);border-radius:var(--rs);border:1px solid var(--border)}
+.tlbl{font-size:.875rem;font-weight:500}
+.tgl{position:relative;width:40px;height:22px;flex-shrink:0}
+.tgl input{display:none}
+.tsl{position:absolute;inset:0;background:var(--border);border-radius:100px;cursor:pointer;transition:background .2s}
+.tsl::before{content:'';position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.tgl input:checked+.tsl{background:var(--ok)}
+.tgl input:checked+.tsl::before{transform:translateX(18px)}
+.sar{display:flex;gap:8px;margin-bottom:12px}
+.sar input{flex:1;border:1.5px solid var(--border);border-radius:var(--rs);padding:9px 14px;font-size:.875rem;font-family:inherit;color:var(--ink);outline:none;background:var(--surface);transition:border-color .15s}
+.sar input:focus{border-color:var(--accent)}
+.se{padding:18px;text-align:center;background:var(--bg);border-radius:var(--rs);border:1px dashed var(--border);color:var(--ink-muted);font-size:.875rem}
+.sit{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.sh{color:var(--ink-muted);font-size:1rem;flex-shrink:0}
+.snum{width:22px;height:22px;border-radius:50%;background:var(--accent-l);color:var(--accent);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.snm{flex:1;font-size:.875rem;font-weight:600}
+.sqc{font-size:.75rem;color:var(--ink-muted)}
+.sdl{background:var(--err-bg);border:none;color:var(--err);width:24px;height:24px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.sdl:hover{background:#FEE2E2}
+.qi{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:16px;margin-bottom:10px}
+.qih{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.qdg{color:var(--ink-muted);font-size:1rem;flex-shrink:0}
+.qn{width:22px;height:22px;border-radius:50%;background:var(--accent-l);color:var(--accent);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qtp{font-size:.65rem;font-weight:700;background:var(--bg2);border:1px solid var(--border);color:var(--ink-soft);border-radius:4px;padding:2px 7px;text-transform:uppercase}
+.qsp{font-size:.65rem;font-weight:700;color:var(--accent);background:var(--accent-l);border-radius:4px;padding:2px 7px}
+.qdl{margin-left:auto;background:var(--err-bg);border:none;color:var(--err);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.875rem;flex-shrink:0}
+.qdl:hover{background:#FEE2E2}
+.qg3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}
+.qi .fld{margin-bottom:10px}
+.qi .fld:last-child{margin-bottom:0}
+.qadd{width:100%;padding:11px;border:2px dashed var(--border);border-radius:var(--rs);background:transparent;color:var(--ink-soft);font-size:.875rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px}
+.qadd:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-l)}
+.pcard{background:linear-gradient(135deg,#0A0F1E,#0F1A3A);border-radius:12px;padding:22px 26px;margin-bottom:16px}
+.pcat{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#93C5FD;margin-bottom:8px}
+.ptitle{font-size:1.25rem;font-weight:800;color:white;margin-bottom:6px}
+.pdesc{font-size:.875rem;color:#94A3B8;line-height:1.5}
+.pmeta{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.pmeta span{font-size:.75rem;color:#7DD3FC}
+.pbody{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:16px;max-height:360px;overflow-y:auto}
+.psec{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);padding:7px 0 5px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.pq{padding:8px 0;border-bottom:1px solid var(--bg2)}
+.pq:last-child{border-bottom:none}
+.pql{font-size:.875rem;font-weight:500;color:var(--ink-soft)}
+.pqt{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.ptag{font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:4px}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.di{background:var(--bg);border-radius:8px;padding:12px}
+.dl{font-size:.7rem;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.dv{font-size:.875rem;font-weight:500}
+.ash{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai{background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px}
+.aq{font-size:.8rem;font-weight:600;color:var(--ink-soft);margin-bottom:4px}
+.av{font-size:.875rem}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:white;padding:12px 20px;border-radius:10px;font-size:.875rem;font-weight:600;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;animation:su .3s ease}
+@keyframes su{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(max-width:900px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}}
+@media(max-width:640px){.content{padding:16px}.f2,.qg3,.dg{grid-template-columns:1fr}.ph{padding:16px}}
+</style>
 </head>
 <body>
 <div class="layout">
 <aside class="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-    <div style="min-width:0"><div class="sb-logo-text">Inspeq</div><div class="sb-logo-badge">Discovery Admin</div></div>
+    <div style="min-width:0"><div class="sb-logo-text">Inspeq</div><div class="sb-badge">Discovery Admin</div></div>
   </div>
   <nav class="sb-nav">
-    <div class="sb-section">Overview</div>
-    <button class="nav-item active" id="nav-dashboard" onclick="showView('dashboard')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
-    </button>
-    <div class="sb-section">Content</div>
-    <button class="nav-item" id="nav-questionnaires" onclick="showView('questionnaires')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Questionnaires
-    </button>
-    <div class="sb-section">Data</div>
-    <button class="nav-item" id="nav-submissions" onclick="showView('submissions')">
+    <div class="sb-sec">Overview</div>
+    <button class="ni active" id="nav-dashboard" onclick="showView('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</button>
+    <div class="sb-sec">Content</div>
+    <button class="ni" id="nav-questionnaires" onclick="showView('questionnaires')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Questionnaires</button>
+    <div class="sb-sec">Data</div>
+    <button class="ni" id="nav-submissions" onclick="showView('submissions')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Submissions
-      <span class="nav-badge" id="subCount">0</span>
-    </button>
-    <button class="nav-item" id="nav-reports" onclick="showView('reports')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports
-    </button>
-    <div class="sb-section">Site</div>
-    <button class="nav-item" onclick="window.open('index.html','_blank')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>View Public Site
-    </button>
+      <span class="ni-badge" id="subCount">0</span></button>
+    <button class="ni" id="nav-reports" onclick="showView('reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</button>
+    <div class="sb-sec">Site</div>
+    <button class="ni" onclick="window.open('index.html','_blank')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>View Public Site</button>
   </nav>
-  <div class="sb-footer">
+  <div class="sb-foot">
     <div class="sb-user">
-      <div class="sb-avatar">A</div>
-      <span class="sb-uname">Admin</span>
-      <button class="logout-btn" onclick="logout()">Sign out</button>
+      <div class="sb-av">A</div><span class="sb-un">Admin</span>
+      <button class="logout" onclick="logout()">Sign out</button>
     </div>
   </div>
 </aside>
-
 <div class="main">
-
   <!-- DASHBOARD -->
   <div id="view-dashboard">
-    <div class="page-header">
-      <div><div class="page-title">Dashboard</div><div class="page-sub">Overview of Discovery activity</div></div>
-      <button class="btn btn-primary" onclick="openWizard(null)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Questionnaire
-      </button>
-    </div>
-    <div class="content">
-      <div class="stats-grid" id="dashStats"></div>
-      <div class="table-wrap">
-        <div class="table-hd-row"><span>Recent Submissions</span>
-          <button class="btn btn-sm btn-secondary" onclick="showView('submissions')" style="padding:5px 12px;font-size:.75rem">View all →</button>
-        </div>
+    <div class="ph"><div><div class="pt">Dashboard</div><div class="ps">Overview of Discovery activity</div></div>
+      <button class="btn bp" onclick="openWizard(null)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Questionnaire</button></div>
+    <div class="content"><div class="sg" id="dStats"></div>
+      <div class="tw"><div class="thdr"><span>Recent Submissions</span>
+        <button class="btn bs b2" onclick="showView('submissions')">View all</button></div>
         <table><thead><tr><th>Name</th><th>Company</th><th>Questionnaire</th><th>Date</th><th></th></tr></thead>
-        <tbody id="dashSubs"></tbody></table>
-      </div>
-    </div>
-  </div>
-
+        <tbody id="dSubs"></tbody></table></div></div></div>
   <!-- QUESTIONNAIRES -->
   <div id="view-questionnaires" style="display:none">
-    <div class="page-header">
-      <div><div class="page-title">Questionnaires</div><div class="page-sub">Manage questionnaires and share links</div></div>
-      <button class="btn btn-primary" onclick="openWizard(null)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Questionnaire
-      </button>
-    </div>
+    <div class="ph"><div><div class="pt">Questionnaires</div><div class="ps">Manage questionnaires and share links</div></div>
+      <button class="btn bp" onclick="openWizard(null)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Questionnaire</button></div>
     <div class="content">
       <div class="toolbar">
-        <input class="search-input" id="qSearch" placeholder="Search questionnaires…" oninput="renderQs()"/>
-        <select class="sel-filter" id="qCatFilter" onchange="renderQs()">
+        <input class="si" id="qSearch" placeholder="Search..." oninput="renderQs()"/>
+        <select class="sf" id="qCatF" onchange="renderQs()">
           <option value="">All Categories</option>
           <option>Manufacturing</option><option>Field Operations</option><option>Construction</option>
           <option>Facility Management</option><option>Energy &amp; Utilities</option>
           <option>Insurance</option><option>General</option><option>Automotive</option>
         </select>
       </div>
-      <div class="table-wrap">
-        <table><thead><tr><th>Title</th><th>Shareable Link</th><th>Questions</th><th>Submissions</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="qTable"></tbody></table>
-      </div>
-    </div>
-  </div>
-
+      <div class="tw"><table><thead><tr><th>Title</th><th>Shareable Link</th><th>Questions</th><th>Submissions</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="qTbl"></tbody></table></div></div></div>
   <!-- SUBMISSIONS -->
   <div id="view-submissions" style="display:none">
-    <div class="page-header">
-      <div><div class="page-title">Submissions</div><div class="page-sub">All customer responses</div></div>
-      <button class="btn btn-sm btn-warning" onclick="exportAllCSV()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel
-      </button>
-    </div>
+    <div class="ph"><div><div class="pt">Submissions</div><div class="ps">All customer responses</div></div>
+      <button class="btn bs bw" onclick="exportAll()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel</button></div>
     <div class="content">
       <div class="toolbar">
-        <input class="search-input" id="subSearch" placeholder="Search by name or company…" oninput="renderSubs()"/>
-        <select class="sel-filter" id="subQFilter" onchange="renderSubs()">
-          <option value="">All Questionnaires</option>
-        </select>
+        <input class="si" id="subSrch" placeholder="Search by name or company..." oninput="renderSubs()"/>
+        <select class="sf" id="subQF" onchange="renderSubs()"><option value="">All Questionnaires</option></select>
       </div>
-      <div class="table-wrap">
-        <table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Questionnaire</th><th>Date</th><th></th></tr></thead>
-        <tbody id="subTable"></tbody></table>
-      </div>
-    </div>
-  </div>
-
+      <div class="tw"><table><thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Questionnaire</th><th>Date</th><th></th></tr></thead>
+        <tbody id="subTbl"></tbody></table></div></div></div>
   <!-- REPORTS -->
   <div id="view-reports" style="display:none">
-    <div class="page-header">
-      <div><div class="page-title">Reports</div><div class="page-sub">Insights across all submissions</div></div>
+    <div class="ph"><div><div class="pt">Reports</div><div class="ps">Insights across all submissions</div></div>
       <div style="display:flex;gap:8px;align-items:center">
-        <select class="sel-filter" id="reportQFilter" onchange="renderReports()" style="font-size:.8rem;padding:7px 32px 7px 12px">
-          <option value="">All Questionnaires</option>
-        </select>
-        <button class="btn btn-sm btn-warning" onclick="exportReportCSV()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel
-        </button>
-      </div>
-    </div>
-    <div class="content" id="reportsContent"></div>
-  </div>
+        <select class="sf" id="repQF" onchange="renderReports()" style="font-size:.8rem;padding:7px 32px 7px 12px"><option value="">All Questionnaires</option></select>
+        <button class="btn bs bw" onclick="exportReport()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel</button></div></div>
+    <div class="content" id="repContent"></div></div>
+</div>
+</div>
 
-</div><!-- /.main -->
-</div><!-- /.layout -->
-
-
-<!-- WIZARD MODAL -->
-<div class="overlay" id="wizOverlay">
+<!-- WIZARD -->
+<div class="ov" id="wizOv">
   <div class="modal" style="max-width:800px">
-    <div class="modal-hd">
-      <div><div class="modal-title" id="wizModalTitle">Create Questionnaire</div><div class="modal-sub">Complete all steps then publish</div></div>
-      <button class="modal-close" onclick="closeWizard()">✕</button>
-    </div>
-    <div class="wiz-steps" id="wizStepsEl"></div>
-    <!-- Step 0: Details -->
-    <div class="wiz-panel active" id="wp0">
-      <div class="form-2col">
-        <div class="field"><label>Title *</label><input type="text" id="wTitle" placeholder="e.g. Customer Discovery"/></div>
-        <div class="field"><label>Category *</label>
-          <select id="wCategory">
-            <option value="">Select…</option>
+    <div class="mhd"><div><div class="mt" id="wizTitle">Create Questionnaire</div><div class="msub">Complete all steps then publish</div></div>
+      <button class="mcls" onclick="closeWiz()">&#x2715;</button></div>
+    <div class="ws" id="wizSteps"></div>
+    <div class="wp on" id="wp0">
+      <div class="f2">
+        <div class="fld"><label>Title *</label><input type="text" id="wTitle" placeholder="e.g. Customer Discovery"/></div>
+        <div class="fld"><label>Category *</label>
+          <select id="wCat"><option value="">Select...</option>
             <option>Manufacturing</option><option>Field Operations</option><option>Construction</option>
             <option>Facility Management</option><option>Energy &amp; Utilities</option>
             <option>Insurance</option><option>General</option><option>Automotive</option>
-          </select>
-        </div>
-      </div>
-      <div class="field"><label>Description *</label><textarea id="wDesc" rows="3" placeholder="Describe what this questionnaire covers and who it's for…"></textarea></div>
-      <div class="toggle-row">
-        <div><div class="toggle-lbl">Active — visible on public site</div><div class="field-note" style="margin-top:3px">You can change this any time after publishing</div></div>
-        <label class="toggle"><input type="checkbox" id="wActive" checked/><span class="tslider"></span></label>
-      </div>
-    </div>
-    <!-- Step 1: Sections -->
-    <div class="wiz-panel" id="wp1">
+          </select></div></div>
+      <div class="fld"><label>Description *</label><textarea id="wDesc" rows="3" placeholder="Describe what this questionnaire covers..."></textarea></div>
+      <div class="trow"><div><div class="tlbl">Active — visible on public site</div><div class="fnote">You can change this after publishing</div></div>
+        <label class="tgl"><input type="checkbox" id="wActive" checked/><span class="tsl"></span></label></div></div>
+    <div class="wp" id="wp1">
       <p style="font-size:.875rem;color:var(--ink-muted);margin-bottom:14px">Sections group questions into themes. Skip for a flat list.</p>
-      <div class="sec-add-row">
-        <input type="text" id="newSecInput" placeholder="e.g. Current Inspection Process" onkeydown="if(event.key==='Enter'){addSection();event.preventDefault()}"/>
-        <button class="btn btn-sm btn-primary" onclick="addSection()">+ Add</button>
-      </div>
-      <div id="sectionList"></div>
-      <p style="font-size:.75rem;color:var(--ink-muted);margin-top:10px">Assign questions to sections in the next step.</p>
-    </div>
-    <!-- Step 2: Questions -->
-    <div class="wiz-panel" id="wp2">
+      <div class="sar"><input type="text" id="newSec" placeholder="e.g. Current Inspection Process"/>
+        <button class="btn bs bp" onclick="addSec()">+ Add</button></div>
+      <div id="secList"></div></div>
+    <div class="wp" id="wp2">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap">
         <p style="font-size:.875rem;color:var(--ink-muted)">Build your question list.</p>
-        <button class="btn btn-sm btn-primary" onclick="addQuestion()">+ Add Question</button>
-      </div>
+        <button class="btn bs bp" onclick="addQ()">+ Add Question</button></div>
       <div id="qList" style="max-height:420px;overflow-y:auto;padding-right:2px"></div>
-      <button class="q-add-btn" onclick="addQuestion()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add another question
-      </button>
-    </div>
-    <!-- Step 3: Preview -->
-    <div class="wiz-panel" id="wp3">
-      <div id="previewContent"></div>
-      <div style="margin-top:14px;background:var(--accent-light);border:1px solid rgba(37,99,235,.2);border-radius:8px;padding:12px 16px;font-size:.8125rem;color:var(--ink-soft)">
-        ✅ Ready to publish. Edit or deactivate any time from Questionnaires.
-      </div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-sm btn-secondary" id="wizBackBtn" onclick="gotoStep(wizStep-1)" style="display:none">← Back</button>
-      <div class="modal-ft-spacer"></div>
-      <button class="btn btn-sm btn-secondary" onclick="closeWizard()">Cancel</button>
-      <button class="btn btn-sm btn-primary" id="wizNextBtn" onclick="wizNext()">Next →</button>
+      <button class="qadd" onclick="addQ()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add another question</button></div>
+    <div class="wp" id="wp3">
+      <div id="prevContent"></div>
+      <div style="margin-top:14px;background:var(--accent-l);border:1px solid rgba(37,99,235,.2);border-radius:8px;padding:12px 16px;font-size:.8125rem;color:var(--ink-soft)">
+        &#x2705; Ready to publish. Edit or deactivate any time.</div></div>
+    <div class="mft">
+      <button class="btn bs b2" id="wBack" onclick="goStep(wStep-1)" style="display:none">&#x2190; Back</button>
+      <div class="msp"></div>
+      <button class="btn bs b2" onclick="closeWiz()">Cancel</button>
+      <button class="btn bs bp" id="wNext" onclick="wNext()">Next &#x2192;</button>
     </div>
   </div>
 </div>
 
-<!-- SUBMISSION DETAIL MODAL -->
-<div class="overlay" id="subOverlay">
+<!-- SUBMISSION DETAIL -->
+<div class="ov" id="subOv">
   <div class="modal" style="max-width:680px">
-    <div class="modal-hd">
-      <div><div class="modal-title" id="subModalTitle">Submission</div><div class="modal-sub" id="subModalDate"></div></div>
-      <button class="modal-close" onclick="closeModal('subOverlay')">✕</button>
-    </div>
-    <div id="subModalBody" style="max-height:62vh;overflow-y:auto"></div>
-    <div class="modal-ft">
-      <div class="modal-ft-spacer"></div>
-      <button class="btn btn-sm btn-warning" id="subExportBtn" onclick="exportSingleCSV(currentSubId)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
-      </button>
-      <button class="btn btn-sm btn-secondary" onclick="closeModal('subOverlay')">Close</button>
+    <div class="mhd"><div><div class="mt" id="subTitle">Submission</div><div class="msub" id="subDate"></div></div>
+      <button class="mcls" onclick="closeOv('subOv')">&#x2715;</button></div>
+    <div id="subBody" style="max-height:62vh;overflow-y:auto"></div>
+    <div class="mft">
+      <div class="msp"></div>
+      <button class="btn bs bw" onclick="exportOne()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+      <button class="btn bs b2" onclick="closeOv('subOv')">Close</button>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-// INLINE DB
-// ══════════════════════════════════════════════════
 // ================================================================
 // Inspeq Discovery — Database Layer
 // Uses localStorage as the database (works 100% without a backend)
@@ -818,611 +704,500 @@ const DB = (() => {
 })();
 
 
-// ══════════════════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════════════════
+// ── AUTH (IIFE - never blocks execution) ─────────────────
 (function() {
   try {
     var s = JSON.parse(localStorage.getItem('inspeq_admin_session') || 'null');
-    if (!s || s.expires <= Date.now()) { window.location.replace('admin.html'); }
+    if (!s || s.expires <= Date.now()) window.location.replace('admin.html');
   } catch(e) { window.location.replace('admin.html'); }
 })();
 
 function logout() { localStorage.removeItem('inspeq_admin_session'); window.location.replace('admin.html'); }
 
-// ══════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function showToast(msg, color) {
+// ── UTILS ─────────────────────────────────────────────────
+function H(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function closeOv(id) { document.getElementById(id).classList.remove('open'); }
+function toast(msg, bg) {
   var t = document.createElement('div'); t.className = 'toast';
-  t.style.background = color || 'var(--ink)'; t.innerHTML = msg;
-  document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 3000);
+  if (bg) t.style.background = bg;
+  t.textContent = msg; document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3000);
+}
+function baseUrl() {
+  var p = window.location.pathname.replace(/\/admin-panel\.html$/, '');
+  return window.location.origin + p;
+}
+function shareUrl(id) { return baseUrl() + '/questionnaire.html?id=' + id; }
+function copyLink(id, btn) {
+  var url = shareUrl(id);
+  var done = function() { btn.textContent = 'Copied!'; btn.classList.add('done'); setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('done'); }, 2000); };
+  if (navigator.clipboard) { navigator.clipboard.writeText(url).then(done).catch(function(){ fallback(url); done(); }); }
+  else { fallback(url); done(); }
+  function fallback(u) { var ta = document.createElement('textarea'); ta.value = u; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
 }
 
-// Get the base URL for shareable links
-function getBaseUrl() {
-  var loc = window.location;
-  var path = loc.pathname.replace(/admin-panel\.html$/, '').replace(/\/+$/, '');
-  return loc.origin + (path || '');
-}
-
-function getShareUrl(qId) {
-  return getBaseUrl() + '/questionnaire.html?id=' + qId;
-}
-
-function copyLink(qId, btn) {
-  var url = getShareUrl(qId);
-  navigator.clipboard.writeText(url).then(function() {
-    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
-    setTimeout(function(){ btn.textContent = 'Copy Link'; btn.classList.remove('copied'); }, 2000);
-  }).catch(function() {
-    // fallback
-    var ta = document.createElement('textarea'); ta.value = url;
-    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-    document.body.removeChild(ta);
-    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
-    setTimeout(function(){ btn.textContent = 'Copy Link'; btn.classList.remove('copied'); }, 2000);
-  });
-}
-
-// ══════════════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════════════
+// ── NAVIGATION ────────────────────────────────────────────
 function showView(name) {
   ['dashboard','questionnaires','submissions','reports'].forEach(function(v) {
     document.getElementById('view-' + v).style.display = v === name ? 'block' : 'none';
   });
-  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  document.querySelectorAll('.ni').forEach(function(n){ n.classList.remove('active'); });
   var el = document.getElementById('nav-' + name);
   if (el) el.classList.add('active');
-  if (name === 'dashboard')      renderDashboard();
+  if (name === 'dashboard')      renderDash();
   if (name === 'questionnaires') renderQs();
-  if (name === 'submissions')    { buildSubFilter(); renderSubs(); }
-  if (name === 'reports')        { buildReportFilter(); renderReports(); }
+  if (name === 'submissions')    { buildSubF(); renderSubs(); }
+  if (name === 'reports')        { buildRepF(); renderReports(); }
 }
 
-// ══════════════════════════════════════════════════
-// DASHBOARD
-// ══════════════════════════════════════════════════
-function renderDashboard() {
-  var qs   = DB.getQuestionnaires();
-  var subs = DB.getSubmissions();
-  var active = qs.filter(function(q){ return q.is_active; }).length;
-  var today  = new Date().toISOString().slice(0,10);
-  var todaySubs = subs.filter(function(s){ return s.submitted_at.slice(0,10) === today; }).length;
-
-  document.getElementById('dashStats').innerHTML =
-    '<div class="stat-card"><div class="stat-label">Questionnaires</div><div class="stat-value">' + qs.length + '</div><div class="stat-sub">' + active + ' active</div></div>' +
-    '<div class="stat-card"><div class="stat-label">Submissions</div><div class="stat-value">' + subs.length + '</div><div class="stat-sub">' + todaySubs + ' today</div></div>' +
-    '<div class="stat-card"><div class="stat-label">Active</div><div class="stat-value">' + active + '</div></div>' +
-    '<div class="stat-card"><div class="stat-label">Categories</div><div class="stat-value">' + [...new Set(qs.map(function(q){ return q.category; }))].length + '</div></div>';
-
+// ── DASHBOARD ─────────────────────────────────────────────
+function renderDash() {
+  var qs = DB.getQuestionnaires(), subs = DB.getSubmissions();
+  var act = qs.filter(function(q){ return q.is_active; }).length;
+  var td = new Date().toISOString().slice(0,10);
+  var tday = subs.filter(function(s){ return s.submitted_at.slice(0,10) === td; }).length;
+  document.getElementById('dStats').innerHTML =
+    sc('Questionnaires', qs.length, act + ' active') +
+    sc('Submissions', subs.length, tday + ' today') +
+    sc('Active', act, '') +
+    sc('Categories', new Set(qs.map(function(q){ return q.category; })).size, '');
   document.getElementById('subCount').textContent = subs.length;
-  var recent = subs.slice(0, 8);
-  document.getElementById('dashSubs').innerHTML = !recent.length
-    ? '<tr><td colspan="5"><div class="empty"><div class="empty-icon">📭</div><p>No submissions yet</p></div></td></tr>'
-    : recent.map(function(s) {
+  var r = subs.slice(0,8);
+  document.getElementById('dSubs').innerHTML = !r.length
+    ? '<tr><td colspan="5"><div class="empty"><div class="empty-icon">&#128235;</div><p>No submissions yet</p></div></td></tr>'
+    : r.map(function(s) {
         var q = DB.getQuestionnaire(s.questionnaire_id);
-        return '<tr><td style="font-weight:600">' + esc(s.full_name) + '</td><td>' + esc(s.company_name) + '</td>' +
-          '<td>' + (q ? '<span class="badge badge-blue" style="font-size:.68rem">' + esc(q.title) + '</span>' : '—') + '</td>' +
+        return '<tr><td style="font-weight:600">' + H(s.full_name) + '</td><td>' + H(s.company_name) + '</td>' +
+          '<td>' + (q ? '<span class="badge bblu" style="font-size:.68rem">' + H(q.title) + '</span>' : '&mdash;') + '</td>' +
           '<td style="color:var(--ink-muted)">' + new Date(s.submitted_at).toLocaleDateString() + '</td>' +
-          '<td><button class="btn btn-xs btn-secondary" onclick="openSubModal('' + s.id + '')">View</button></td></tr>';
+          '<td><button class="btn bx b2" onclick="openSub(\'' + s.id + '\')">View</button></td></tr>';
       }).join('');
 }
+function sc(label, val, sub) {
+  return '<div class="sc"><div class="sl">' + label + '</div><div class="sv">' + val + '</div>' + (sub ? '<div class="ss">' + sub + '</div>' : '') + '</div>';
+}
 
-// ══════════════════════════════════════════════════
-// QUESTIONNAIRES
-// ══════════════════════════════════════════════════
+// ── QUESTIONNAIRES ────────────────────────────────────────
 function renderQs() {
-  var search = (document.getElementById('qSearch') ? document.getElementById('qSearch').value : '').toLowerCase();
-  var catF   = document.getElementById('qCatFilter') ? document.getElementById('qCatFilter').value : '';
+  var s = (document.getElementById('qSearch') ? document.getElementById('qSearch').value : '').toLowerCase();
+  var c = document.getElementById('qCatF') ? document.getElementById('qCatF').value : '';
   var qs = DB.getQuestionnaires();
-  if (search) qs = qs.filter(function(q){ return q.title.toLowerCase().includes(search) || q.category.toLowerCase().includes(search); });
-  if (catF)   qs = qs.filter(function(q){ return q.category === catF; });
-
-  var tbody = document.getElementById('qTable');
+  if (s) qs = qs.filter(function(q){ return q.title.toLowerCase().indexOf(s) >= 0 || q.category.toLowerCase().indexOf(s) >= 0; });
+  if (c) qs = qs.filter(function(q){ return q.category === c; });
+  var allSubs = DB.getSubmissions();
+  var tbody = document.getElementById('qTbl');
   if (!qs.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-icon">📋</div><h3>No questionnaires</h3><p>Click "+ New Questionnaire" to get started.</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-icon">&#128203;</div><h3>No questionnaires</h3><p>Click New Questionnaire to get started.</p></div></td></tr>';
     return;
   }
-  var allSubs = DB.getSubmissions();
   tbody.innerHTML = qs.map(function(q) {
-    var qArr   = DB.getQuestions(q.id);
-    var secs   = [...new Set(qArr.map(function(x){ return x.section||''; }).filter(Boolean))];
-    var subCnt = allSubs.filter(function(s){ return s.questionnaire_id === q.id; }).length;
-    var shareUrl = getShareUrl(q.id);
-    var btnId = 'cpbtn_' + q.id;
+    var qa = DB.getQuestions(q.id);
+    var secs = [];
+    qa.forEach(function(x){ if (x.section && secs.indexOf(x.section) < 0) secs.push(x.section); });
+    var sc2 = allSubs.filter(function(s){ return s.questionnaire_id === q.id; }).length;
+    var url = shareUrl(q.id);
+    var bid = 'cb_' + q.id;
     return '<tr>' +
-      '<td><div style="font-weight:600;font-size:.875rem">' + esc(q.title) + (q.featured ? ' <span class="badge badge-purple" style="margin-left:6px;font-size:.62rem">⭐</span>' : '') + '</div>' +
-        '<div style="font-size:.7rem;color:var(--ink-muted);margin-top:2px">' + esc(q.category) + (secs.length ? ' · ' + secs.length + ' sections' : '') + '</div></td>' +
-      '<td><div class="url-box"><span class="url-box-text" title="' + shareUrl + '">' + shareUrl + '</span>' +
-        '<button class="url-copy-btn" id="' + btnId + '" onclick="copyLink('' + q.id + '', this)">Copy Link</button></div></td>' +
-      '<td>' + qArr.length + '</td>' +
-      '<td><button class="btn btn-xs btn-secondary" onclick="showQSubmissions('' + q.id + '')" style="gap:4px">' +
-        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
-        subCnt + ' submissions</button></td>' +
-      '<td><span class="badge ' + (q.is_active ? 'badge-green' : 'badge-gray') + '">' + (q.is_active ? 'Active' : 'Inactive') + '</span></td>' +
-      '<td><div class="actions">' +
-        '<button class="btn btn-xs btn-secondary" onclick="editQ('' + q.id + '')">Edit</button>' +
-        '<button class="btn btn-xs ' + (q.is_active ? 'btn-danger' : 'btn-success') + '" onclick="toggleQ('' + q.id + '')">' + (q.is_active ? 'Deactivate' : 'Activate') + '</button>' +
-        '<button class="btn btn-xs btn-secondary" onclick="window.open(getShareUrl('' + q.id + ''),'_blank')">Preview</button>' +
-        '<button class="btn btn-xs btn-warning" onclick="exportQCSV('' + q.id + '')">' +
-          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>XLS</button>' +
-        '<button class="btn btn-xs btn-danger" onclick="deleteQ('' + q.id + '')">Delete</button>' +
+      '<td><div style="font-weight:600;font-size:.875rem">' + H(q.title) + (q.featured ? ' <span class="badge bpur" style="font-size:.6rem">&#11088;</span>' : '') + '</div>' +
+        '<div style="font-size:.7rem;color:var(--ink-muted);margin-top:2px">' + H(q.category) + (secs.length ? ' &middot; ' + secs.length + ' sections' : '') + '</div></td>' +
+      '<td><div class="urlbox"><span class="urltxt" title="' + H(url) + '">' + H(url) + '</span>' +
+        '<button class="copybtn" id="' + bid + '" onclick="copyLink(\'' + q.id + '\',this)">Copy</button></div></td>' +
+      '<td>' + qa.length + '</td>' +
+      '<td><button class="btn bx b2" onclick="filterSubs(\'' + q.id + '\')">' + sc2 + ' responses</button></td>' +
+      '<td><span class="badge ' + (q.is_active ? 'bgrn' : 'bgry') + '">' + (q.is_active ? 'Active' : 'Inactive') + '</span></td>' +
+      '<td><div class="acts">' +
+        '<button class="btn bx b2" onclick="editQ(\'' + q.id + '\')">Edit</button>' +
+        '<button class="btn bx ' + (q.is_active ? 'bd' : 'bg') + '" onclick="toggleQ(\'' + q.id + '\')">' + (q.is_active ? 'Deactivate' : 'Activate') + '</button>' +
+        '<button class="btn bx b2" onclick="window.open(shareUrl(\'' + q.id + '\'),\'_blank\')">Preview</button>' +
+        '<button class="btn bx bw" onclick="exportQ(\'' + q.id + '\')">XLS</button>' +
+        '<button class="btn bx bd" onclick="delQ(\'' + q.id + '\')">Delete</button>' +
       '</div></td></tr>';
   }).join('');
 }
-
-function showQSubmissions(qId) {
-  document.getElementById('subQFilter').value = qId;
+function filterSubs(qId) {
   showView('submissions');
-  buildSubFilter();
-  document.getElementById('subQFilter').value = qId;
+  buildSubF();
+  document.getElementById('subQF').value = qId;
   renderSubs();
 }
-
-function toggleQ(id) { DB.toggleQuestionnaire(id); renderQs(); renderDashboard(); }
-function deleteQ(id) {
+function toggleQ(id) { DB.toggleQuestionnaire(id); renderQs(); renderDash(); }
+function delQ(id) {
   if (!confirm('Delete this questionnaire and all its questions?')) return;
-  DB.deleteQuestionnaire(id); renderQs(); renderDashboard();
+  DB.deleteQuestionnaire(id); renderQs(); renderDash();
 }
 function editQ(id) { var q = DB.getQuestionnaire(id); if (q) openWizard(q); }
 
-// ══════════════════════════════════════════════════
-// SUBMISSIONS
-// ══════════════════════════════════════════════════
-function buildSubFilter() {
-  var sel = document.getElementById('subQFilter');
-  var cur = sel.value;
+// ── SUBMISSIONS ───────────────────────────────────────────
+function buildSubF() {
+  var sel = document.getElementById('subQF'), cur = sel.value;
   sel.innerHTML = '<option value="">All Questionnaires</option>' +
-    DB.getQuestionnaires().map(function(q){ return '<option value="' + q.id + '">' + esc(q.title) + '</option>'; }).join('');
+    DB.getQuestionnaires().map(function(q){ return '<option value="' + q.id + '">' + H(q.title) + '</option>'; }).join('');
   sel.value = cur;
 }
-
 function renderSubs() {
-  var search = (document.getElementById('subSearch') ? document.getElementById('subSearch').value : '').toLowerCase();
-  var qF     = document.getElementById('subQFilter') ? document.getElementById('subQFilter').value : '';
+  var s = (document.getElementById('subSrch') ? document.getElementById('subSrch').value : '').toLowerCase();
+  var qf = document.getElementById('subQF') ? document.getElementById('subQF').value : '';
   var subs = DB.getSubmissions();
-  if (search) subs = subs.filter(function(s){ return s.full_name.toLowerCase().includes(search) || s.company_name.toLowerCase().includes(search) || s.email.toLowerCase().includes(search); });
-  if (qF)     subs = subs.filter(function(s){ return s.questionnaire_id === qF; });
+  if (s) subs = subs.filter(function(x){ return x.full_name.toLowerCase().indexOf(s) >= 0 || x.company_name.toLowerCase().indexOf(s) >= 0 || x.email.toLowerCase().indexOf(s) >= 0; });
+  if (qf) subs = subs.filter(function(x){ return x.questionnaire_id === qf; });
   document.getElementById('subCount').textContent = DB.getSubmissions().length;
-  var tbody = document.getElementById('subTable');
+  var tb = document.getElementById('subTbl');
   if (!subs.length) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">📭</div><h3>No submissions yet</h3><p>Responses appear once customers complete a questionnaire.</p></div></td></tr>';
+    tb.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">&#128235;</div><h3>No submissions yet</h3><p>Responses appear once customers complete a questionnaire.</p></div></td></tr>';
     return;
   }
-  tbody.innerHTML = subs.map(function(s) {
+  tb.innerHTML = subs.map(function(s) {
     var q = DB.getQuestionnaire(s.questionnaire_id);
-    return '<tr><td style="font-weight:600">' + esc(s.full_name) + '</td><td>' + esc(s.company_name) + '</td>' +
-      '<td style="color:var(--ink-muted);font-size:.8rem">' + esc(s.email) + '</td>' +
-      '<td style="color:var(--ink-muted);font-size:.8rem">' + esc(s.phone||'—') + '</td>' +
-      '<td>' + (q ? '<span class="badge badge-blue" style="font-size:.65rem">' + esc(q.title) + '</span>' : '—') + '</td>' +
+    return '<tr><td style="font-weight:600">' + H(s.full_name) + '</td><td>' + H(s.company_name) + '</td>' +
+      '<td style="color:var(--ink-muted);font-size:.8rem">' + H(s.email) + '</td>' +
+      '<td style="color:var(--ink-muted);font-size:.8rem">' + H(s.phone||'&mdash;') + '</td>' +
+      '<td>' + (q ? '<span class="badge bblu" style="font-size:.65rem">' + H(q.title) + '</span>' : '&mdash;') + '</td>' +
       '<td style="color:var(--ink-muted)">' + new Date(s.submitted_at).toLocaleString() + '</td>' +
-      '<td><button class="btn btn-xs btn-secondary" onclick="openSubModal('' + s.id + '')">View</button></td></tr>';
+      '<td><button class="btn bx b2" onclick="openSub(\'' + s.id + '\')">View</button></td></tr>';
   }).join('');
 }
-
-var currentSubId = null;
-function openSubModal(id) {
-  currentSubId = id;
+var curSubId = null;
+function openSub(id) {
+  curSubId = id;
   var sub = DB.getSubmission(id); if (!sub) return;
-  var q   = DB.getQuestionnaire(sub.questionnaire_id);
-  var answers = DB.getAnswers(id);
-  var qs  = q ? DB.getQuestions(q.id) : [];
-  var qMap = {};
-  qs.forEach(function(x){ qMap[x.id] = { label: x.label, section: x.section || '' }; });
-  var secs = [...new Set(qs.map(function(x){ return x.section||''; }).filter(Boolean))];
-  var body = '<div class="ans-sec-hd">Customer Information</div>' +
-    '<div class="detail-grid">' +
-    '<div class="detail-item"><div class="detail-lbl">Full Name</div><div class="detail-val">' + esc(sub.full_name) + '</div></div>' +
-    '<div class="detail-item"><div class="detail-lbl">Company</div><div class="detail-val">' + esc(sub.company_name) + '</div></div>' +
-    '<div class="detail-item"><div class="detail-lbl">Email</div><div class="detail-val">' + esc(sub.email) + '</div></div>' +
-    '<div class="detail-item"><div class="detail-lbl">Phone</div><div class="detail-val">' + esc(sub.phone||'—') + '</div></div></div>';
-  if (q) body += '<div class="ans-sec-hd">Questionnaire: ' + esc(q.title) + '</div>';
+  var q = DB.getQuestionnaire(sub.questionnaire_id);
+  var ans = DB.getAnswers(id);
+  var qs = q ? DB.getQuestions(q.id) : [];
+  var qm = {};
+  qs.forEach(function(x){ qm[x.id] = {label:x.label, sec:x.section||''}; });
+  var secs = [];
+  qs.forEach(function(x){ if (x.section && secs.indexOf(x.section) < 0) secs.push(x.section); });
+  var body = '<div class="ash">Customer Information</div><div class="dg">' +
+    di('Full Name', sub.full_name) + di('Company', sub.company_name) +
+    di('Email', sub.email) + di('Phone', sub.phone||'&mdash;') + '</div>';
+  if (q) body += '<div class="ash">Questionnaire: ' + H(q.title) + '</div>';
   if (secs.length) {
     secs.forEach(function(sec) {
-      var sA = answers.filter(function(a){ return qMap[a.question_id] && qMap[a.question_id].section === sec; });
-      if (!sA.length) return;
-      body += '<div class="ans-sec-hd" style="color:var(--accent)">' + esc(sec.replace(/^\d+\.\s*/,'')) + '</div>';
-      body += sA.map(function(a){ return '<div class="ans-item"><div class="ans-q">' + esc(qMap[a.question_id] ? qMap[a.question_id].label : 'Q') + '</div><div class="ans-v">' + (a.answer_value ? esc(a.answer_value) : '<em style="color:var(--ink-muted)">No answer</em>') + '</div></div>'; }).join('');
+      var sa = ans.filter(function(a){ return qm[a.question_id] && qm[a.question_id].sec === sec; });
+      if (!sa.length) return;
+      body += '<div class="ash" style="color:var(--accent)">' + H(sec.replace(/^\d+\.\s*/,'')) + '</div>';
+      sa.forEach(function(a){ body += aitem(qm[a.question_id] ? qm[a.question_id].label : 'Q', a.answer_value); });
     });
+    ans.filter(function(a){ return qm[a.question_id] && !qm[a.question_id].sec; }).forEach(function(a){ body += aitem(qm[a.question_id] ? qm[a.question_id].label : 'Q', a.answer_value); });
   } else {
-    body += answers.map(function(a){ return '<div class="ans-item"><div class="ans-q">' + esc(qMap[a.question_id] ? qMap[a.question_id].label : 'Q') + '</div><div class="ans-v">' + (a.answer_value ? esc(a.answer_value) : '<em style="color:var(--ink-muted)">No answer</em>') + '</div></div>'; }).join('');
-    if (!answers.length) body += '<p style="color:var(--ink-muted);font-size:.875rem">No answers recorded.</p>';
+    if (ans.length) ans.forEach(function(a){ body += aitem(qm[a.question_id] ? qm[a.question_id].label : 'Q', a.answer_value); });
+    else body += '<p style="color:var(--ink-muted);font-size:.875rem">No answers recorded.</p>';
   }
-  var uploads = DB.getUploads(id);
-  if (uploads.length) { body += '<div class="ans-sec-hd">Uploaded Files</div>' + uploads.map(function(u){ return '<div class="ans-item" style="display:flex;align-items:center;gap:8px">📎 <span style="font-size:.875rem">' + esc(u.file_name) + '</span></div>'; }).join(''); }
-  document.getElementById('subModalTitle').textContent = sub.full_name + ' — ' + sub.company_name;
-  document.getElementById('subModalDate').textContent  = 'Submitted ' + new Date(sub.submitted_at).toLocaleString();
-  document.getElementById('subModalBody').innerHTML    = body;
-  document.getElementById('subOverlay').classList.add('open');
+  var ups = DB.getUploads(id);
+  if (ups.length) { body += '<div class="ash">Uploaded Files</div>'; ups.forEach(function(u){ body += '<div class="ai" style="display:flex;align-items:center;gap:8px">&#128206; <span style="font-size:.875rem">' + H(u.file_name) + '</span></div>'; }); }
+  document.getElementById('subTitle').textContent = sub.full_name + ' \u2014 ' + sub.company_name;
+  document.getElementById('subDate').textContent = 'Submitted ' + new Date(sub.submitted_at).toLocaleString();
+  document.getElementById('subBody').innerHTML = body;
+  document.getElementById('subOv').classList.add('open');
 }
+function di(l, v) { return '<div class="di"><div class="dl">' + l + '</div><div class="dv">' + H(v) + '</div></div>'; }
+function aitem(q, v) { return '<div class="ai"><div class="aq">' + H(q) + '</div><div class="av">' + (v ? H(v) : '<em style="color:var(--ink-muted)">No answer</em>') + '</div></div>'; }
 
-// ══════════════════════════════════════════════════
-// REPORTS
-// ══════════════════════════════════════════════════
-var CHART_COLORS = ['#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6','#0EA5E9','#EC4899','#14B8A6','#F97316','#6366F1'];
-
-function buildReportFilter() {
-  var sel = document.getElementById('reportQFilter');
-  var cur = sel.value;
+// ── REPORTS ───────────────────────────────────────────────
+var COLORS = ['#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6','#0EA5E9','#EC4899','#14B8A6','#F97316','#6366F1'];
+function buildRepF() {
+  var sel = document.getElementById('repQF'), cur = sel.value;
   sel.innerHTML = '<option value="">All Questionnaires</option>' +
-    DB.getQuestionnaires().map(function(q){ return '<option value="' + q.id + '">' + esc(q.title) + '</option>'; }).join('');
+    DB.getQuestionnaires().map(function(q){ return '<option value="' + q.id + '">' + H(q.title) + '</option>'; }).join('');
   sel.value = cur;
 }
-
 function renderReports() {
-  var qF    = document.getElementById('reportQFilter') ? document.getElementById('reportQFilter').value : '';
-  var subs  = DB.getSubmissions();
-  if (qF) subs = subs.filter(function(s){ return s.questionnaire_id === qF; });
-
-  var el = document.getElementById('reportsContent');
+  var qf = document.getElementById('repQF') ? document.getElementById('repQF').value : '';
+  var subs = DB.getSubmissions();
+  if (qf) subs = subs.filter(function(s){ return s.questionnaire_id === qf; });
+  var el = document.getElementById('repContent');
   if (!subs.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Charts will appear once customers submit questionnaires.</p></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">&#128202;</div><h3>No data yet</h3><p>Charts appear once customers submit questionnaires.</p></div>';
     return;
   }
-
-  // Summary stats
-  var allQs = DB.getQuestionnaires();
-  var activeSubs = qF ? subs : subs;
-  var uniqueCompanies = [...new Set(subs.map(function(s){ return s.company_name; }))].length;
-  var html = '<div class="stats-grid" style="margin-bottom:28px">' +
-    '<div class="stat-card"><div class="stat-label">Total Responses</div><div class="stat-value">' + subs.length + '</div></div>' +
-    '<div class="stat-card"><div class="stat-label">Unique Companies</div><div class="stat-value">' + uniqueCompanies + '</div></div>' +
-    '<div class="stat-card"><div class="stat-label">Questionnaires</div><div class="stat-value">' + (qF ? 1 : [...new Set(subs.map(function(s){ return s.questionnaire_id; }))].length) + '</div></div>' +
+  var cos = new Set(subs.map(function(s){ return s.company_name; })).size;
+  var qids = [];
+  subs.forEach(function(s){ if (qids.indexOf(s.questionnaire_id) < 0) qids.push(s.questionnaire_id); });
+  var html = '<div class="sg">' +
+    sc('Total Responses', subs.length, '') +
+    sc('Unique Companies', cos, '') +
+    sc('Questionnaires', qf ? 1 : qids.length, '') +
     '</div>';
-
-  // Submissions over time (last 14 days)
-  html += buildTimelineChart(subs);
-
-  // Per-question charts for radio/checkbox/dropdown fields
-  var qsToAnalyse = qF ? [DB.getQuestionnaire(qF)] : allQs;
-  qsToAnalyse = qsToAnalyse.filter(Boolean);
-
-  var chartCards = [];
-  qsToAnalyse.forEach(function(questionnaire) {
-    var questions = DB.getQuestions(questionnaire.id).filter(function(q){
-      return ['radio','checkbox','dropdown'].includes(q.field_type) && q.options_json;
-    });
-    var qSubs = subs.filter(function(s){ return s.questionnaire_id === questionnaire.id; });
-    if (!qSubs.length || !questions.length) return;
-
+  html += timeline(subs);
+  var cards = [];
+  var qs2check = qf ? [DB.getQuestionnaire(qf)] : DB.getQuestionnaires();
+  qs2check.filter(Boolean).forEach(function(questionnaire) {
+    var questions = DB.getQuestions(questionnaire.id).filter(function(q){ return ['radio','checkbox','dropdown'].indexOf(q.field_type) >= 0 && q.options_json; });
+    var qsubs = subs.filter(function(s){ return s.questionnaire_id === questionnaire.id; });
+    if (!qsubs.length || !questions.length) return;
     questions.forEach(function(question) {
-      var answers = [];
-      qSubs.forEach(function(sub) {
-        var subAnswers = DB.getAnswers(sub.id).filter(function(a){ return a.question_id === question.id && a.answer_value; });
-        subAnswers.forEach(function(a) {
-          // handle comma-separated checkbox answers
-          a.answer_value.split(',').forEach(function(v){ var t = v.trim(); if (t) answers.push(t); });
+      var vals = [];
+      qsubs.forEach(function(sub) {
+        DB.getAnswers(sub.id).filter(function(a){ return a.question_id === question.id && a.answer_value; }).forEach(function(a) {
+          a.answer_value.split(',').forEach(function(v){ v = v.trim(); if (v) vals.push(v); });
         });
       });
-      if (!answers.length) return;
-      // count frequencies
-      var counts = {};
-      answers.forEach(function(a){ counts[a] = (counts[a]||0) + 1; });
-      var total = answers.length;
+      if (!vals.length) return;
+      var counts = {}, total = vals.length;
+      vals.forEach(function(v){ counts[v] = (counts[v]||0) + 1; });
       var sorted = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
-      chartCards.push(buildBarChart(question, questionnaire.title, sorted, counts, total));
+      cards.push(barchart(question, questionnaire.title, sorted, counts, total));
     });
   });
-
-  if (chartCards.length) {
-    html += '<div class="reports-grid">' + chartCards.join('') + '</div>';
-  } else {
-    html += '<div class="table-wrap" style="padding:32px;text-align:center;color:var(--ink-muted)"><p>No multiple-choice questions with responses yet. Charts appear for radio, checkbox, and dropdown fields.</p></div>';
-  }
-
+  if (cards.length) html += '<div class="rg">' + cards.join('') + '</div>';
+  else html += '<div class="tw" style="padding:32px;text-align:center;color:var(--ink-muted)"><p>No multiple-choice questions with data yet. Charts show for radio, checkbox, and dropdown fields.</p></div>';
   el.innerHTML = html;
 }
-
-function buildTimelineChart(subs) {
-  var days = [];
-  for (var i = 13; i >= 0; i--) {
-    var d = new Date(); d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0,10));
-  }
-  var counts = {};
-  days.forEach(function(d){ counts[d] = 0; });
-  subs.forEach(function(s){ var d = s.submitted_at.slice(0,10); if (counts[d] !== undefined) counts[d]++; });
-  var max = Math.max.apply(null, days.map(function(d){ return counts[d]; })) || 1;
-  var bars = days.map(function(d, i) {
-    var h = Math.round((counts[d]/max)*60);
-    var label = d.slice(5); // MM-DD
-    return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">' +
-      '<div style="font-size:.65rem;color:var(--ink-muted);font-weight:600">' + (counts[d]||'') + '</div>' +
-      '<div style="flex:1;display:flex;align-items:flex-end;width:100%">' +
-        '<div style="width:100%;height:' + Math.max(4,h) + 'px;background:' + (counts[d] ? 'var(--accent)' : 'var(--surface-3)') + ';border-radius:3px 3px 0 0;transition:height .4s"></div>' +
-      '</div>' +
-      '<div style="font-size:.6rem;color:var(--ink-muted);white-space:nowrap">' + label + '</div>' +
-      '</div>';
+function timeline(subs) {
+  var days = [], i;
+  for (i = 13; i >= 0; i--) { var d = new Date(); d.setDate(d.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+  var counts = {}; days.forEach(function(d){ counts[d]=0; });
+  subs.forEach(function(s){ var d=s.submitted_at.slice(0,10); if (counts[d]!==undefined) counts[d]++; });
+  var mx = Math.max.apply(null, days.map(function(d){ return counts[d]; })) || 1;
+  var bars = days.map(function(d) {
+    var h = Math.round((counts[d]/mx)*60);
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">' +
+      '<div style="font-size:.6rem;color:var(--ink-muted);font-weight:600">' + (counts[d]||'') + '</div>' +
+      '<div style="flex:1;display:flex;align-items:flex-end;width:100%"><div style="width:100%;height:' + Math.max(3,h) + 'px;background:' + (counts[d]?'var(--accent)':'var(--bg2)') + ';border-radius:2px 2px 0 0"></div></div>' +
+      '<div style="font-size:.58rem;color:var(--ink-muted)">' + d.slice(5) + '</div></div>';
   }).join('');
-  return '<div class="report-card" style="margin-bottom:20px"><div class="report-card-title">Submissions Over Time</div><div class="report-card-sub">Last 14 days</div>' +
-    '<div style="display:flex;gap:3px;align-items:flex-end;height:100px;padding:8px 0">' + bars + '</div></div>';
+  return '<div class="rc" style="margin-bottom:20px"><div class="rct">Submissions Over Time</div><div class="rcs">Last 14 days</div><div style="display:flex;gap:2px;align-items:flex-end;height:90px;padding:4px 0">' + bars + '</div></div>';
 }
-
-function buildBarChart(question, qTitle, sorted, counts, total) {
-  var bars = sorted.slice(0,8).map(function(opt, i) {
+function barchart(question, qtitle, sorted, counts, total) {
+  var rows = sorted.slice(0,8).map(function(opt, i) {
     var pct = Math.round((counts[opt]/total)*100);
-    var color = CHART_COLORS[i % CHART_COLORS.length];
-    return '<div class="bar-row">' +
-      '<div class="bar-label" title="' + esc(opt) + '">' + esc(opt.length > 24 ? opt.slice(0,22)+'…' : opt) + '</div>' +
-      '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(pct,3) + '%;background:' + color + '"><span class="bar-count">' + counts[opt] + '</span></div></div>' +
-      '<div class="bar-pct">' + pct + '%</div></div>';
+    var col = COLORS[i % COLORS.length];
+    var lbl = opt.length > 22 ? opt.slice(0,20)+'...' : opt;
+    return '<div class="brow"><div class="blbl" title="' + H(opt) + '">' + H(lbl) + '</div>' +
+      '<div class="btrack"><div class="bfill" style="width:' + Math.max(pct,3) + '%;background:' + col + '"><span class="bcnt">' + counts[opt] + '</span></div></div>' +
+      '<div class="bpct">' + pct + '%</div></div>';
   }).join('');
-  var secLabel = question.section ? ' <span style="opacity:.6;font-weight:400">· ' + question.section.replace(/^\d+\.\s*/,'') + '</span>' : '';
-  return '<div class="report-card">' +
-    '<div class="report-card-title">' + esc(question.label.length > 60 ? question.label.slice(0,58)+'…' : question.label) + secLabel + '</div>' +
-    '<div class="report-card-sub">' + total + ' responses · ' + esc(qTitle) + '</div>' +
-    '<div class="bar-wrap">' + bars + '</div></div>';
+  var lbl = question.label.length > 55 ? question.label.slice(0,53)+'...' : question.label;
+  var sec = question.section ? ' <span style="opacity:.6;font-weight:400">&#183; ' + question.section.replace(/^\d+\.\s*/,'') + '</span>' : '';
+  return '<div class="rc"><div class="rct">' + H(lbl) + sec + '</div><div class="rcs">' + total + ' responses &middot; ' + H(qtitle) + '</div><div class="bwrap">' + rows + '</div></div>';
 }
 
-// ══════════════════════════════════════════════════
-// EXCEL EXPORT  (CSV encoded as UTF-8 BOM for Excel)
-// ══════════════════════════════════════════════════
-function csvEsc(v) {
-  var s = (v === null || v === undefined) ? '' : String(v);
-  if (s.includes(',') || s.includes('"') || s.includes('\n')) s = '"' + s.replace(/"/g,'""') + '"';
+// ── EXPORT (CSV with UTF-8 BOM — opens in Excel) ──────────
+function csvVal(v) {
+  var s = (v == null) ? '' : String(v);
+  if (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0) s = '"' + s.replace(/"/g, '""') + '"';
   return s;
 }
-
-function downloadCSV(filename, rows) {
-  var csv = '\uFEFF' + rows.map(function(r){ return r.map(csvEsc).join(','); }).join('\n');
-  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = filename; a.click();
-}
-
-function getExportRows(subs) {
+function buildRows(subs) {
   if (!subs.length) return null;
-  // Gather all question labels across relevant questionnaires
-  var qIds = [...new Set(subs.map(function(s){ return s.questionnaire_id; }))];
-  var allQuestions = [];
-  var qMeta = {};
-  qIds.forEach(function(qId) {
-    var q = DB.getQuestionnaire(qId);
-    if (!q) return;
-    var qs = DB.getQuestions(qId);
-    qs.forEach(function(question) {
-      var key = qId + '||' + question.id;
-      if (!qMeta[key]) {
-        qMeta[key] = { label: question.label, qTitle: q.title };
-        allQuestions.push(key);
-      }
+  var qids = [], qm = {}, qorder = [];
+  subs.forEach(function(s){ if (qids.indexOf(s.questionnaire_id) < 0) qids.push(s.questionnaire_id); });
+  qids.forEach(function(qid) {
+    var qq = DB.getQuestionnaire(qid); if (!qq) return;
+    DB.getQuestions(qid).forEach(function(q) {
+      var k = qid + '|' + q.id;
+      if (!qm[k]) { qm[k] = {label:q.label, qtitle:qq.title}; qorder.push(k); }
     });
   });
-
-  var header = ['Submitted At','Full Name','Company','Email','Phone','Questionnaire'].concat(
-    allQuestions.map(function(k){ return qMeta[k].label; })
-  );
-  var rows = [header];
+  var hdr = ['Submitted At','Full Name','Company','Email','Phone','Questionnaire'].concat(qorder.map(function(k){ return qm[k].label; }));
+  var rows = [hdr];
   subs.forEach(function(s) {
-    var q = DB.getQuestionnaire(s.questionnaire_id);
-    var answers = DB.getAnswers(s.id);
-    var aMap = {};
-    answers.forEach(function(a){ aMap[a.question_id] = a.answer_value; });
-    var row = [
-      new Date(s.submitted_at).toLocaleString(),
-      s.full_name, s.company_name, s.email, s.phone||'',
-      q ? q.title : ''
-    ].concat(allQuestions.map(function(k) {
-      // Only include answer if it belongs to this submission's questionnaire
-      var parts = k.split('||');
-      var qId = parts[0]; var qId2 = parts[1];
-      if (s.questionnaire_id !== qId) return '';
-      return aMap[qId2] || '';
-    }));
-    rows.push(row);
+    var qq = DB.getQuestionnaire(s.questionnaire_id);
+    var am = {}; DB.getAnswers(s.id).forEach(function(a){ am[a.question_id] = a.answer_value; });
+    rows.push([new Date(s.submitted_at).toLocaleString(), s.full_name, s.company_name, s.email, s.phone||'', qq?qq.title:''].concat(
+      qorder.map(function(k) {
+        var parts = k.split('|'); if (parts[0] !== s.questionnaire_id) return '';
+        return am[parts[1]] || '';
+      })
+    ));
   });
   return rows;
 }
-
-function exportAllCSV() {
-  var subs = DB.getSubmissions();
-  if (!subs.length) { showToast('⚠️ No submissions to export', '#F59E0B'); return; }
-  downloadCSV('inspeq-all-submissions.csv', getExportRows(subs));
-  showToast('✅ Exported all submissions');
+function dlCSV(name, rows) {
+  var csv = '\uFEFF' + rows.map(function(r){ return r.map(csvVal).join(','); }).join('\n');
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = name; a.click();
+}
+function exportAll() {
+  var s = DB.getSubmissions(); if (!s.length) { toast('No submissions to export', '#F59E0B'); return; }
+  dlCSV('inspeq-submissions.csv', buildRows(s)); toast('Exported ' + s.length + ' submissions');
+}
+function exportQ(qid) {
+  var s = DB.getSubmissions().filter(function(x){ return x.questionnaire_id === qid; });
+  if (!s.length) { toast('No submissions for this questionnaire', '#F59E0B'); return; }
+  var q = DB.getQuestionnaire(qid);
+  dlCSV('inspeq-' + (q ? q.slug||q.id : qid) + '.csv', buildRows(s));
+  toast('Exported ' + s.length + ' submissions');
+}
+function exportOne() {
+  if (!curSubId) return;
+  var s = DB.getSubmission(curSubId); if (!s) return;
+  dlCSV('inspeq-submission.csv', buildRows([s])); toast('Submission exported');
+}
+function exportReport() {
+  var qf = document.getElementById('repQF') ? document.getElementById('repQF').value : '';
+  var s = DB.getSubmissions(); if (qf) s = s.filter(function(x){ return x.questionnaire_id === qf; });
+  if (!s.length) { toast('No data to export', '#F59E0B'); return; }
+  dlCSV('inspeq-report.csv', buildRows(s)); toast('Report exported');
 }
 
-function exportQCSV(qId) {
-  var subs = DB.getSubmissions().filter(function(s){ return s.questionnaire_id === qId; });
-  var q = DB.getQuestionnaire(qId);
-  if (!subs.length) { showToast('⚠️ No submissions for this questionnaire', '#F59E0B'); return; }
-  downloadCSV('inspeq-' + (q ? q.slug||q.id : qId) + '.csv', getExportRows(subs));
-  showToast('✅ Exported ' + subs.length + ' submissions');
-}
+// ── WIZARD ────────────────────────────────────────────────
+var STEPS = ['Details','Sections','Questions','Preview'];
+var FTYPES = ['text','textarea','number','dropdown','radio','checkbox','date','file'];
+var wStep = 0, wEditId = null, wSecs = [], wQs = [];
 
-function exportSingleCSV(id) {
-  var sub = DB.getSubmission(id); if (!sub) return;
-  downloadCSV('inspeq-submission-' + id + '.csv', getExportRows([sub]));
-  showToast('✅ Submission exported');
-}
-
-function exportReportCSV() {
-  var qF   = document.getElementById('reportQFilter') ? document.getElementById('reportQFilter').value : '';
-  var subs = DB.getSubmissions();
-  if (qF) subs = subs.filter(function(s){ return s.questionnaire_id === qF; });
-  if (!subs.length) { showToast('⚠️ No data to export', '#F59E0B'); return; }
-  downloadCSV('inspeq-report.csv', getExportRows(subs));
-  showToast('✅ Report exported');
-}
-
-// ══════════════════════════════════════════════════
-// WIZARD
-// ══════════════════════════════════════════════════
-var WIZARD_STEPS = ['Details','Sections','Questions','Preview'];
-var FIELD_TYPES  = ['text','textarea','number','dropdown','radio','checkbox','date','file'];
-var wizStep = 0, wizEditId = null, wizSections = [], wizQuestions = [];
-
-function openWizard(existingQ) {
-  wizStep = 0; wizEditId = null; wizSections = []; wizQuestions = [];
-  if (existingQ) {
-    wizEditId = existingQ.id;
-    document.getElementById('wTitle').value    = existingQ.title       || '';
-    document.getElementById('wCategory').value = existingQ.category    || '';
-    document.getElementById('wDesc').value     = existingQ.description || '';
-    document.getElementById('wActive').checked = !!existingQ.is_active;
-    var eqs = DB.getQuestions(existingQ.id);
-    wizSections  = [...new Set(eqs.map(function(q){ return q.section||''; }).filter(Boolean))].map(function(s){ return {name:s}; });
-    wizQuestions = eqs.map(function(q){ return Object.assign({},q); });
-    document.getElementById('wizModalTitle').textContent = 'Edit Questionnaire';
+function openWizard(eq) {
+  wStep = 0; wEditId = null; wSecs = []; wQs = [];
+  if (eq) {
+    wEditId = eq.id;
+    document.getElementById('wTitle').value = eq.title || '';
+    document.getElementById('wCat').value   = eq.category || '';
+    document.getElementById('wDesc').value  = eq.description || '';
+    document.getElementById('wActive').checked = !!eq.is_active;
+    var eqs = DB.getQuestions(eq.id);
+    var secsSeen = [];
+    eqs.forEach(function(q){ if (q.section && secsSeen.indexOf(q.section) < 0) secsSeen.push(q.section); });
+    wSecs = secsSeen.map(function(s){ return {name:s}; });
+    wQs = eqs.map(function(q){ return {id:q.id,label:q.label,field_type:q.field_type,is_required:q.is_required,section:q.section||'',options_json:q.options_json}; });
+    document.getElementById('wizTitle').textContent = 'Edit Questionnaire';
   } else {
-    document.getElementById('wTitle').value    = '';
-    document.getElementById('wCategory').value = '';
-    document.getElementById('wDesc').value     = '';
+    document.getElementById('wTitle').value = '';
+    document.getElementById('wCat').value   = '';
+    document.getElementById('wDesc').value  = '';
     document.getElementById('wActive').checked = true;
-    document.getElementById('wizModalTitle').textContent = 'Create Questionnaire';
+    document.getElementById('wizTitle').textContent = 'Create Questionnaire';
   }
-  gotoStep(0);
-  document.getElementById('wizOverlay').classList.add('open');
+  goStep(0);
+  document.getElementById('wizOv').classList.add('open');
 }
+function closeWiz() { document.getElementById('wizOv').classList.remove('open'); }
 
-function closeWizard() { document.getElementById('wizOverlay').classList.remove('open'); }
-
-function gotoStep(n) {
-  wizStep = n;
-  var stepsEl = document.getElementById('wizStepsEl');
-  stepsEl.innerHTML = WIZARD_STEPS.map(function(label, i) {
-    var cls = i < n ? 'done' : i === n ? 'active' : '';
-    var numTxt = i < n ? '✓' : String(i+1);
-    var connector = i < WIZARD_STEPS.length-1 ? '<div class="wiz-connector' + (i < n ? ' done' : '') + '"></div>' : '';
-    return '<div class="wiz-step-item ' + cls + '"><div class="wiz-num">' + numTxt + '</div><div class="wiz-lbl">' + label + '</div></div>' + connector;
+function goStep(n) {
+  wStep = n;
+  var el = document.getElementById('wizSteps');
+  el.innerHTML = STEPS.map(function(lbl, i) {
+    var cls = i < n ? 'done' : i === n ? 'on' : '';
+    var con = i < STEPS.length-1 ? '<div class="wc' + (i < n ? ' done' : '') + '"></div>' : '';
+    return '<div class="wi ' + cls + '"><div class="wn">' + (i < n ? '&#x2713;' : (i+1)) + '</div><div class="wl">' + lbl + '</div></div>' + con;
   }).join('');
-  [0,1,2,3].forEach(function(i){ document.getElementById('wp'+i).classList.toggle('active', i===n); });
-  document.getElementById('wizBackBtn').style.display = n > 0 ? 'flex' : 'none';
-  document.getElementById('wizNextBtn').textContent = n === 3 ? 'Publish →' : 'Next →';
-  if (n===1) renderSectionList();
-  if (n===2) renderQList();
-  if (n===3) renderPreview();
+  [0,1,2,3].forEach(function(i){ document.getElementById('wp'+i).classList.toggle('on', i===n); });
+  document.getElementById('wBack').style.display = n > 0 ? 'flex' : 'none';
+  document.getElementById('wNext').textContent = n === 3 ? 'Publish' : 'Next \u2192';
+  if (n===1) drawSecs();
+  if (n===2) drawQs();
+  if (n===3) drawPrev();
 }
 
-function wizNext() {
-  if (wizStep === 0) {
+function wNext() {
+  if (wStep === 0) {
     var t = document.getElementById('wTitle').value.trim();
-    var c = document.getElementById('wCategory').value;
+    var c = document.getElementById('wCat').value;
     var d = document.getElementById('wDesc').value.trim();
-    if (!t||!c||!d) { alert('Please fill in the title, category and description.'); return; }
+    if (!t || !c || !d) { alert('Please fill in the title, category and description.'); return; }
   }
-  if (wizStep === 3) { publishWizard(); return; }
-  gotoStep(wizStep+1);
+  if (wStep === 3) { publish(); return; }
+  goStep(wStep + 1);
 }
 
-function addSection() {
-  var inp = document.getElementById('newSecInput');
-  var raw = inp.value.trim(); if (!raw) return;
-  wizSections.push({ name: (wizSections.length+1) + '. ' + raw });
-  inp.value = ''; renderSectionList();
+function addSec() {
+  var inp = document.getElementById('newSec'), v = inp.value.trim(); if (!v) return;
+  wSecs.push({name: (wSecs.length+1) + '. ' + v}); inp.value = ''; drawSecs();
 }
-function removeSection(i) {
-  var gone = wizSections[i].name;
-  wizSections.splice(i,1);
-  wizQuestions = wizQuestions.map(function(q){ return q.section===gone ? Object.assign({},q,{section:''}) : q; });
-  renderSectionList();
+function rmSec(i) {
+  var gone = wSecs[i].name; wSecs.splice(i,1);
+  wQs = wQs.map(function(q){ return q.section === gone ? {id:q.id,label:q.label,field_type:q.field_type,is_required:q.is_required,section:'',options_json:q.options_json} : q; });
+  drawSecs();
 }
-function renderSectionList() {
-  var el = document.getElementById('sectionList');
-  if (!wizSections.length) { el.innerHTML = '<div class="sec-empty">No sections — questionnaire will have a flat list.</div>'; return; }
-  el.innerHTML = wizSections.map(function(s,i){
-    var qc = wizQuestions.filter(function(q){ return q.section===s.name; }).length;
-    return '<div class="sec-item"><span class="sec-handle">⠿</span><span class="sec-num">'+(i+1)+'</span><span class="sec-name">'+esc(s.name.replace(/^\d+\.\s*/,''))+'</span><span class="sec-qcount">'+qc+' q</span><button class="sec-del" onclick="removeSection('+i+')">✕</button></div>';
+function drawSecs() {
+  var el = document.getElementById('secList');
+  if (!wSecs.length) { el.innerHTML = '<div class="se">No sections added. Questions will be in a flat list.</div>'; return; }
+  el.innerHTML = wSecs.map(function(s,i) {
+    var qc = wQs.filter(function(q){ return q.section === s.name; }).length;
+    return '<div class="sit"><span class="sh">&#x283F;</span><span class="snum">'+(i+1)+'</span><span class="snm">'+H(s.name.replace(/^\d+\.\s*/,''))+'</span><span class="sqc">'+qc+' q</span><button class="sdl" onclick="rmSec('+i+')">&#x2715;</button></div>';
   }).join('');
 }
 
-function addQuestion() {
-  wizQuestions.push({ id:'', label:'', field_type:'text', is_required:true, section: wizSections[0] ? wizSections[0].name : '', options_json:null });
-  renderQList();
-  setTimeout(function(){ var l=document.getElementById('qList'); if(l.lastElementChild) l.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 80);
+function addQ() {
+  wQs.push({id:'',label:'',field_type:'text',is_required:true,section:wSecs.length?wSecs[0].name:'',options_json:null});
+  drawQs();
+  setTimeout(function(){ var l=document.getElementById('qList'); if(l.lastElementChild) l.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'}); },80);
 }
-function removeQuestion(i) { wizQuestions.splice(i,1); renderQList(); }
-function onQFieldChange(i, field, val) {
-  wizQuestions[i][field] = val;
-  if (field==='field_type') {
-    var needsOpts = ['dropdown','radio','checkbox'].includes(val);
-    if (needsOpts && !wizQuestions[i].options_json) wizQuestions[i].options_json = '[]';
-    if (!needsOpts) wizQuestions[i].options_json = null;
-    renderQList();
+function rmQ(i) { wQs.splice(i,1); drawQs(); }
+function chgQF(i, field, val) {
+  wQs[i][field] = val;
+  if (field === 'field_type') {
+    var ho = ['dropdown','radio','checkbox'].indexOf(val) >= 0;
+    if (ho && !wQs[i].options_json) wQs[i].options_json = '[]';
+    if (!ho) wQs[i].options_json = null;
+    drawQs();
   }
 }
-function onQOptsChange(i, text) {
-  wizQuestions[i].options_json = JSON.stringify(text.split('\n').map(function(s){ return s.trim(); }).filter(Boolean));
+function chgOpts(i, txt) {
+  wQs[i].options_json = JSON.stringify(txt.split('\n').map(function(s){ return s.trim(); }).filter(Boolean));
 }
-function renderQList() {
+function drawQs() {
   var list = document.getElementById('qList');
-  if (!wizQuestions.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--ink-muted);font-size:.875rem;background:var(--surface-2);border-radius:var(--r-sm)">No questions yet. Click "+ Add Question".</div>'; return; }
-  var secOpts = wizSections.map(function(s){ return '<option value="'+esc(s.name)+'">'+esc(s.name.replace(/^\d+\.\s*/,''))+'</option>'; }).join('');
-  list.innerHTML = wizQuestions.map(function(q,i){
-    var needsOpts = ['dropdown','radio','checkbox'].includes(q.field_type);
+  if (!wQs.length) { list.innerHTML = '<div style="padding:28px;text-align:center;color:var(--ink-muted);font-size:.875rem;background:var(--bg);border-radius:var(--rs)">No questions yet. Click Add Question to begin.</div>'; return; }
+  var sopts = wSecs.map(function(s){ return '<option value="'+H(s.name)+'">'+H(s.name.replace(/^\d+\.\s*/,''))+'</option>'; }).join('');
+  list.innerHTML = wQs.map(function(q,i) {
+    var ho = ['dropdown','radio','checkbox'].indexOf(q.field_type) >= 0;
     var opts = q.options_json ? JSON.parse(q.options_json) : [];
-    var safeLabel = (q.label||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    return '<div class="q-item"><div class="q-item-hd"><span class="q-drag">⠿</span><span class="q-num">'+(i+1)+'</span><span class="q-type-pill">'+q.field_type+'</span>' +
-      (q.section ? '<span class="q-sec-pill">'+esc(q.section.replace(/^\d+\.\s*/,''))+'</span>' : '') +
-      '<button class="q-del" onclick="removeQuestion('+i+')">✕</button></div>' +
-      '<div class="q-grid-3">' +
-        '<div class="field"><label>Question *</label><input type="text" value="'+safeLabel+'" oninput="wizQuestions['+i+'].label=this.value" placeholder="e.g. What type of assets do you inspect?"/></div>' +
-        '<div class="field"><label>Field Type</label><select onchange="onQFieldChange('+i+','field_type',this.value)">'+FIELD_TYPES.map(function(t){ return '<option value="'+t+'"'+(q.field_type===t?' selected':'')+'>'+t+'</option>'; }).join('')+'</select></div>' +
-        '<div class="field"><label>Required?</label><select onchange="onQFieldChange('+i+','is_required',this.value==='true')"><option value="true"'+(q.is_required?' selected':'')+'>Required</option><option value="false"'+(!q.is_required?' selected':'')+'>Optional</option></select></div>' +
-      '</div>' +
-      (wizSections.length ? '<div class="field"><label>Section</label><select onchange="wizQuestions['+i+'].section=this.value"><option value="">— No section —</option>'+wizSections.map(function(s){ return '<option value="'+esc(s.name)+'"'+(q.section===s.name?' selected':'')+'>'+esc(s.name.replace(/^\d+\.\s*/,''))+'</option>'; }).join('')+'</select></div>' : '') +
-      (needsOpts ? '<div class="field"><label>Options <span style="font-weight:400;color:var(--ink-muted)">(one per line)</span></label><textarea rows="3" oninput="onQOptsChange('+i+',this.value)" placeholder="Option A&#10;Option B&#10;Option C">'+opts.join('\n')+'</textarea></div>' : '') +
-    '</div>';
+    var lv = (q.label||'').replace(/"/g,'&quot;');
+    var ftOpts = FTYPES.map(function(t){ return '<option value="'+t+'"'+(q.field_type===t?' selected':'')+'>'+t+'</option>'; }).join('');
+    var reqOpts = '<option value="true"'+(q.is_required?' selected':'')+'>Required</option><option value="false"'+(!q.is_required?' selected':'')+'>Optional</option>';
+    var secSel = wSecs.length ? '<div class="fld"><label>Section</label><select onchange="wQs['+i+'].section=this.value"><option value="">No section</option>' + wSecs.map(function(s){ return '<option value="'+H(s.name)+'"'+(q.section===s.name?' selected':'')+'>'+H(s.name.replace(/^\d+\.\s*/,''))+'</option>'; }).join('') + '</select></div>' : '';
+    var optsFld = ho ? '<div class="fld"><label>Options (one per line)</label><textarea rows="3" oninput="chgOpts('+i+',this.value)" placeholder="Option A&#10;Option B&#10;Option C">'+H(opts.join('\n'))+'</textarea></div>' : '';
+    return '<div class="qi"><div class="qih"><span class="qdg">&#x283F;</span><span class="qn">'+(i+1)+'</span><span class="qtp">'+q.field_type+'</span>'+(q.section?'<span class="qsp">'+H(q.section.replace(/^\d+\.\s*/,''))+'</span>':'')+
+      '<button class="qdl" onclick="rmQ('+i+')">&#x2715;</button></div>'+
+      '<div class="qg3"><div class="fld"><label>Question *</label><input type="text" value="'+lv+'" oninput="wQs['+i+'].label=this.value" placeholder="e.g. What assets do you inspect?"/></div>'+
+      '<div class="fld"><label>Field Type</label><select onchange="chgQF('+i+',\'field_type\',this.value)">'+ftOpts+'</select></div>'+
+      '<div class="fld"><label>Required?</label><select onchange="chgQF('+i+',\'is_required\',this.value===\'true\')">'+reqOpts+'</select></div></div>'+
+      secSel + optsFld + '</div>';
   }).join('');
 }
 
-function renderPreview() {
-  var title    = document.getElementById('wTitle').value.trim();
-  var category = document.getElementById('wCategory').value;
-  var desc     = document.getElementById('wDesc').value.trim();
-  var active   = document.getElementById('wActive').checked;
-  var usedSecs = [...new Set(wizQuestions.map(function(q){ return q.section||''; }).filter(Boolean))];
-  var mins     = Math.max(2, Math.ceil(wizQuestions.length * 0.65));
-  var bodyHtml = '';
-  if (usedSecs.length) {
-    usedSecs.forEach(function(sec) {
-      var sQs = wizQuestions.filter(function(q){ return q.section===sec; });
-      bodyHtml += '<div class="preview-sec-title">'+esc(sec.replace(/^\d+\.\s*/,''))+'</div>';
-      bodyHtml += sQs.map(function(q){
-        var opts = q.options_json ? JSON.parse(q.options_json) : [];
-        return '<div class="preview-q"><div class="preview-q-lbl">'+(wizQuestions.indexOf(q)+1)+'. '+esc(q.label||'(no label)')+'</div><div class="preview-q-tags"><span class="q-tag" style="background:var(--accent-light);color:var(--accent)">'+q.field_type+'</span><span class="q-tag" style="background:'+(q.is_required?'#FFF7ED':'var(--surface-3)')+';color:'+(q.is_required?'#C2410C':'var(--ink-muted)')+'">'+( q.is_required?'Required':'Optional')+'</span>'+(opts.length?'<span class="q-tag" style="background:var(--surface-3);color:var(--ink-muted)">'+opts.length+' options</span>':'')+'</div></div>';
-      }).join('');
+function drawPrev() {
+  var title = document.getElementById('wTitle').value.trim();
+  var cat   = document.getElementById('wCat').value;
+  var desc  = document.getElementById('wDesc').value.trim();
+  var act   = document.getElementById('wActive').checked;
+  var usecs = []; wQs.forEach(function(q){ if (q.section && usecs.indexOf(q.section) < 0) usecs.push(q.section); });
+  var mins = Math.max(2, Math.ceil(wQs.length * 0.65));
+  var bhtml = '';
+  if (usecs.length) {
+    usecs.forEach(function(sec) {
+      var sqs = wQs.filter(function(q){ return q.section === sec; });
+      bhtml += '<div class="psec">'+H(sec.replace(/^\d+\.\s*/,''))+'</div>';
+      sqs.forEach(function(q) {
+        var op = q.options_json ? JSON.parse(q.options_json) : [];
+        bhtml += '<div class="pq"><div class="pql">'+(wQs.indexOf(q)+1)+'. '+H(q.label||'(no label)')+'</div><div class="pqt"><span class="ptag" style="background:var(--accent-l);color:var(--accent)">'+q.field_type+'</span><span class="ptag" style="background:'+(q.is_required?'#FFF7ED':'var(--bg2)')+';color:'+(q.is_required?'#C2410C':'var(--ink-muted)')+'">'+( q.is_required?'Required':'Optional')+'</span>'+(op.length?'<span class="ptag" style="background:var(--bg2);color:var(--ink-muted)">'+op.length+' options</span>':'')+'</div></div>';
+      });
     });
-    wizQuestions.filter(function(q){ return !q.section; }).forEach(function(q){ bodyHtml += '<div class="preview-q"><div class="preview-q-lbl">'+(wizQuestions.indexOf(q)+1)+'. '+esc(q.label||'(no label)')+'</div></div>'; });
+    wQs.filter(function(q){ return !q.section; }).forEach(function(q,i){ bhtml += '<div class="pq"><div class="pql">'+(wQs.indexOf(q)+1)+'. '+H(q.label||'(no label)')+'</div></div>'; });
   } else {
-    bodyHtml = wizQuestions.map(function(q,i){ return '<div class="preview-q"><div class="preview-q-lbl">'+(i+1)+'. '+esc(q.label||'(no label)')+'</div><div class="preview-q-tags"><span class="q-tag" style="background:var(--accent-light);color:var(--accent)">'+q.field_type+'</span></div></div>'; }).join('');
+    bhtml = wQs.map(function(q,i){ return '<div class="pq"><div class="pql">'+(i+1)+'. '+H(q.label||'(no label)')+'</div><div class="pqt"><span class="ptag" style="background:var(--accent-l);color:var(--accent)">'+q.field_type+'</span></div></div>'; }).join('');
   }
-  if (!bodyHtml) bodyHtml = '<p style="color:var(--ink-muted);font-size:.875rem;padding:12px 0">No questions added yet.</p>';
-  document.getElementById('previewContent').innerHTML =
-    '<div class="preview-card"><div class="preview-cat">'+(category||'—')+'</div><div class="preview-title">'+(title||'Untitled')+'</div><div class="preview-desc">'+(desc||'No description')+'</div><div class="preview-meta"><span>⏱ ~'+mins+' min</span><span>✅ '+wizQuestions.length+' questions</span>'+(usedSecs.length?'<span>📑 '+usedSecs.length+' sections</span>':'')+'<span style="color:'+(active?'#6EE7B7':'#FCA5A5')+'">'+(active?'● Active':'○ Inactive')+'</span></div></div>' +
-    '<div class="preview-body">'+bodyHtml+'</div>';
+  if (!bhtml) bhtml = '<p style="color:var(--ink-muted);font-size:.875rem">No questions added yet.</p>';
+  document.getElementById('prevContent').innerHTML =
+    '<div class="pcard"><div class="pcat">'+(cat||'&mdash;')+'</div><div class="ptitle">'+(title||'Untitled')+'</div><div class="pdesc">'+(desc||'No description')+'</div><div class="pmeta"><span>&#x23F1; ~'+mins+' min</span><span>&#x2705; '+wQs.length+' questions</span>'+(usecs.length?'<span>&#x1F4D1; '+usecs.length+' sections</span>':'')+'<span style="color:'+(act?'#6EE7B7':'#FCA5A5')+'">'+(act?'&#x25CF; Active':'&#x25CB; Inactive')+'</span></div></div>'+
+    '<div class="pbody">'+bhtml+'</div>';
 }
 
-function publishWizard() {
-  var title    = document.getElementById('wTitle').value.trim();
-  var category = document.getElementById('wCategory').value;
-  var desc     = document.getElementById('wDesc').value.trim();
-  if (!wizQuestions.length) { alert('Please add at least one question.'); gotoStep(2); return; }
-  if (wizQuestions.some(function(q){ return !(q.label||'').trim(); })) { alert('Some questions have no label.'); gotoStep(2); return; }
-  var data = { title:title, category:category, description:desc, is_active: document.getElementById('wActive').checked };
-  if (wizEditId) data.id = wizEditId;
+function publish() {
+  var title = document.getElementById('wTitle').value.trim();
+  var cat   = document.getElementById('wCat').value;
+  var desc  = document.getElementById('wDesc').value.trim();
+  if (!wQs.length) { alert('Please add at least one question.'); goStep(2); return; }
+  if (wQs.some(function(q){ return !(q.label||'').trim(); })) { alert('Some questions have no label. Please fill in all labels.'); goStep(2); return; }
+  var data = {title:title, category:cat, description:desc, is_active:document.getElementById('wActive').checked};
+  if (wEditId) data.id = wEditId;
   var saved = DB.saveQuestionnaire(data);
-  var qId   = saved && saved.id;
-  if (!qId) { alert('Something went wrong. Please try again.'); return; }
-  DB.saveQuestions(qId, wizQuestions);
-  closeWizard(); renderQs(); renderDashboard();
-  showToast('✅ Questionnaire ' + (wizEditId ? 'updated' : 'published') + '!');
+  if (!saved || !saved.id) { alert('Something went wrong. Please try again.'); return; }
+  DB.saveQuestions(saved.id, wQs);
+  closeWiz(); renderQs(); renderDash();
+  toast('Questionnaire ' + (wEditId ? 'updated' : 'published') + '!');
 }
 
-// ── ESC helper ──────────────────────────────────────────────
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// ── KEYBOARD ─────────────────────────────────────────────
+document.getElementById('newSec').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); addSec(); } });
 
-// ── Backdrop close ──────────────────────────────────────────
-document.getElementById('wizOverlay').addEventListener('click', function(e){ if(e.target.id==='wizOverlay') closeWizard(); });
-document.getElementById('subOverlay').addEventListener('click', function(e){ if(e.target.id==='subOverlay') closeModal('subOverlay'); });
+// ── BACKDROP ─────────────────────────────────────────────
+document.getElementById('wizOv').addEventListener('click', function(e){ if(e.target===this) closeWiz(); });
+document.getElementById('subOv').addEventListener('click', function(e){ if(e.target===this) closeOv('subOv'); });
 
-// ── Init ────────────────────────────────────────────────────
-renderDashboard();
-gotoStep(0);
+// ── INIT ─────────────────────────────────────────────────
+renderDash();
+goStep(0);
 </script>
 </body>
 </html>
